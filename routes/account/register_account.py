@@ -2,9 +2,9 @@ import uuid
 from time import time
 from . import account
 from threading import Thread
-from config import PATH_TO_DATABASE, GD_SERVER_NAME, DOMAIN
 from utils import check_secret, mail_sender, regex, last_id, passwd, \
     request_get as rg, database as db, memcache as mc
+from config import PATH_TO_DATABASE, ACCOUNTS_ACTIVATION_VIA_MAIL, GD_SERVER_NAME, DOMAIN
 
 
 whitelist_emails = ["gmail.com", "ya.ru", "yandex.by", "yandex.com",
@@ -40,20 +40,21 @@ def register_account():
     ) == 1:
         return "-1"
 
-    code = str(uuid.uuid4())
-
-    message_data = {
-        "title": f"Activate your account | {GD_SERVER_NAME}",
-        "recipient": email,
-        "body": f"Your username: {username}\nAccount activation link: {DOMAIN}/activate_account?code={code}"
-    }
-
-    sending_message = Thread(target=mail_sender.main, args=(message_data,))
-    sending_message.start()
-
     account_id = last_id.main(db.account)
 
-    mc.client.set(f"CT:{code}:confirm", account_id, 3600)
+    if ACCOUNTS_ACTIVATION_VIA_MAIL:
+        code = str(uuid.uuid4())
+
+        message_data = {
+            "title": f"Activate your account | {GD_SERVER_NAME}",
+            "recipient": email,
+            "body": f"Your username: {username}\nAccount activation link: {DOMAIN}/activate_account?code={code}"
+        }
+
+        sending_message = Thread(target=mail_sender.main, args=(message_data,))
+        sending_message.start()
+
+        mc.client.set(f"CT:{code}:confirm", account_id, 3600)
 
     sample_account = {
         "_id": account_id,

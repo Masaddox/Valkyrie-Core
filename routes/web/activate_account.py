@@ -1,24 +1,34 @@
 from . import web
-from config import HCAPTCHA_SITE_KEY
 from flask import request, render_template
-from utils import request_get, passwd, \
+from utils import request_get, regex, passwd, \
     hcaptcha as hc, database as db, memcache as mc
+from config import HCAPTCHA_SITE_KEY, ACCOUNTS_ACTIVATION_VIA_MAIL
 
 
 @web.route("/activate_account", methods=("POST", "GET"))
 def activate_account():
-    code = request_get.main("code")
     message = ""
 
-    if code is None:
-        return "Code is invalid!"
+    if ACCOUNTS_ACTIVATION_VIA_MAIL:
+        code = request_get.main("code")
 
-    account_id = mc.client.get(f"CT:{code}:confirm")
+        if code is None:
+            return "Code is invalid!"
 
-    if account_id is None:
-        return "Code is invalid!"
+        account_id = mc.client.get(f"CT:{code}:confirm")
 
-    account_id = int(account_id.decode())
+        if account_id is None:
+            return "Code is invalid!"
+
+        account_id = int(account_id.decode())
+    else:
+        try:
+            username = regex.char_clean(request_get.main('login'))
+            account_id = db.account.find(
+                {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
+        except:
+            message = "Wrong login!"
+            raise
 
     try:
         if request.method == "POST":
@@ -26,6 +36,12 @@ def activate_account():
 
             if not hc.hcaptcha.verify():
                 message = "Captcha failed!"
+                raise
+
+            if db.account.count_documents({
+                "_id": account_id, "is_valid": 1
+            }) == 1:
+                message = "Account already verified!"
                 raise
 
             if not passwd.check_password(
@@ -48,10 +64,12 @@ def activate_account():
             db.account.update_one({"_id": account_id}, {"$set": {"is_valid": 1}})
             db.account_stat.insert_one(sample_account_stat)
 
-            mc.client.delete(f"CT:{code}:confirm")
+            if ACCOUNTS_ACTIVATION_VIA_MAIL:
+                mc.client.delete(f"CT:{code}:confirm")
 
             return "Account verified!"
         else:
             raise
     except:
-        return render_template('activate_account.html', SITE_KEY=HCAPTCHA_SITE_KEY, message=message)
+        html_file = "activate_account.html" if ACCOUNTS_ACTIVATION_VIA_MAIL else "activate_account_no_email.html"
+        return render_template(html_file, SITE_KEY=HCAPTCHA_SITE_KEY, message=message)

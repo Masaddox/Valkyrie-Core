@@ -14,13 +14,15 @@ DISCORD_SERVER_LINK = "https://discord.com/"
 
 # Пути
 
-DOMAIN = ""  # Пример "http://127.0.0.1:5000"
+DOMAIN = ""  # Example "https://example.com"
 
 PATH_TO_ROOT = getcwd()
 PATH_TO_SONG = DOMAIN + "/song"
 PATH_TO_DATABASE = "/database/db"
 
 # Почта
+
+ACCOUNTS_ACTIVATION_VIA_MAIL = False
 
 MAIL_SERVER = "mail.example.ru"
 MAIL_USERNAME = "admin@example.com"

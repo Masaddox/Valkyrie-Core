@@ -1,6 +1,8 @@
 from utils import database as db
 
 
+db.account.create_index("username", unique=True)
+db.account.create_index("email", unique=True)
 db.account_comment.create_index("account_id")
 db.account_stat.create_index("username", unique=True)
 db.action_download.create_index("level_id")
