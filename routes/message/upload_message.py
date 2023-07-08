@@ -34,7 +34,7 @@ def upload_message():
     body = rg.main("body")
 
     subject_decode = enc.base64_decode(subject)
-    body_decode = enc.base64_decode(body)
+    body_decode = enc.xor(enc.base64_decode(body), "14251")
 
     if len(subject_decode) > 35 or len(subject_decode) == 0:
         return "-1"
