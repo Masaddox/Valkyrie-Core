@@ -2,21 +2,19 @@ import re
 from flask import request
 
 
-forbidden_symbols = r"[~:|#]"
-
-
 def main(arg, arg_type="str"):
     received_data = request.values.get(arg)
 
     if received_data is None:
-        if arg_type == "str":
+        if arg_type == "str" or arg_type == "link":
             return ""
         elif arg_type == "int":
             return 0
         else:
             return ""
 
-    if arg_type == "str":
+    if arg_type == "str" or arg_type == "link":
+        forbidden_symbols = r"[~:|#]" if arg_type == "str" else r"[~|#]"
         return re.sub(forbidden_symbols, "", received_data)
     elif arg_type == "int":
         try:

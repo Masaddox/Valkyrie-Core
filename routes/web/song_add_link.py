@@ -18,10 +18,10 @@ def song_add_link():
         login = regex.char_clean(rg.main("login"))
         password = rg.main("password")
 
-        song_link = rg.main("song_link")
-
         if request.method != "POST":
             raise
+
+        song_link = rg.main("song_link", "link")
 
         if len(login) > 15 or len(password) > 20:
             message = "Incorrect login or password!"
@@ -71,12 +71,17 @@ def song_add_link():
         song_link = song_link.replace(" ", "_")
         song_link = song_link.replace("%20", "_")
 
-        if regex.clear_prohibited_chars(song_link.split("/")[-1:]) != song_link.split("/")[-1:]:
+        if regex.clear_prohibited_chars(song_link.split("/")[-1:][0]) != song_link.split("/")[-1:][0]:
             message = "There are invalid characters in the song name! " \
                       "(try renaming the song with letters and numbers only.)"
             raise
 
-        req = urllib.request.Request(song_link, method='HEAD')
+        try:
+            req = urllib.request.Request(song_link, method='HEAD')
+        except:
+            message = "There are errors in the link!"
+            raise
+
         f = urllib.request.urlopen(req)
 
         if int(f.status) != 200:
