@@ -29,7 +29,7 @@ def upload_account_comment():
     ):
         abort(500)
 
-    if account_comment_decode > 140 or account_comment_decode == 0:
+    if len(account_comment_decode) > 140 or len(account_comment_decode) == 0:
         abort(500)
 
     sample_comment = {
