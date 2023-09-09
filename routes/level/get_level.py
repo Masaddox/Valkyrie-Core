@@ -229,12 +229,8 @@ def get_level():
     else:
         response = response[:-1] + "#"
 
-    is_custom_song = False
-
     for lvl in levels:
         if lvl["song_id"] > 0 and lvl["is_official_song"] == 0:
-            if not is_custom_song:
-                is_custom_song = True
                 
             song_info = tuple(db.song.find({"_id": lvl["song_id"]}))
             single_song = {
@@ -244,7 +240,7 @@ def get_level():
             }
             response += rp.main(single_song, 3)[:-1] + ":~"
     else:
-        if is_custom_song:
+        if response[-2:] == ":~":
             response = response[:-2]
 
     response += f"#{db.level.count_documents(query)}:{offset}:10#{level_hashing.return_hash(hash_string)}"
