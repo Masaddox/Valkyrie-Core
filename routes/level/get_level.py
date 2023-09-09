@@ -233,7 +233,9 @@ def get_level():
 
     for lvl in levels:
         if lvl["song_id"] > 0 and lvl["is_official_song"] == 0:
-            is_custom_song = True
+            if not is_custom_song:
+                is_custom_song = True
+                
             song_info = tuple(db.song.find({"_id": lvl["song_id"]}))
             single_song = {
                 1: song_info[0]["_id"], 2: song_info[0]["name"], 3: 0,
