@@ -37,6 +37,8 @@ such as *daily/weekly chests* and *level leaderboards* cut or implemented differ
 Although the core in its current state works well, this does not negate fact that there may be errors / shortcomings in the core.
 If someone finds and reports a bug, then the bug will be fixed as soon as possible.
 
+P.s. 20.12.2023: I may be making support for 2.2 soon.
+
 ### Примечание [RUS]
 
 Ядро в первую очередь писалось под нужды автора, так что некоторые функции,
@@ -44,8 +46,9 @@ If someone finds and reports a bug, then the bug will be fixed as soon as possib
 по своему. Хоть ядро в нынешнем состоянии работает хорошо, но это не отрицает того, что в ядре могут быть баги/недочёты.
 Если кто-то найдёт и сообщит о баге, то баг будет как можно быстрее исправлен.
 
+P.s. 20.12.2023: Возможно в скором времени я сделаю поддержку 2.2.
+
 ---
 
 ### Contacts for communication | Контакты для связи
-> Discord: masaddox \
-> VK: https://vk.com/oasis_is_fake
+> Discord: masaddox
