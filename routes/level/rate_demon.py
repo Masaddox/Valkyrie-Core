@@ -1,23 +1,27 @@
 from . import level
 from config import PATH_TO_DATABASE
-from utils import passwd, check_secret, request_get as rg, \
-    database as db
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
 
 
 @level.route(f"{PATH_TO_DATABASE}/rateGJDemon21.php", methods=("POST", "GET"))
 def rate_demon():
-    if not check_secret.main(
-        rg.main("secret"), 3
+    if not check_secret(
+        request_get("secret"), 3
     ):
         return "-1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    level_id = rg.main("levelID", "int")
-    demon_type = rg.main("rating", "int")
+    level_id = request_get("levelID", "int")
+    demon_type = request_get("rating", "int")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "-1"

@@ -1,8 +1,16 @@
 from . import score
 from pymongo import DESCENDING
-from config import PATH_TO_DATABASE, MEMCACHE_LIFETIME
-from utils import check_secret, passwd, request_get as rg, \
-    database as db, response_processing as rp, memcache as mc
+from config import PATH_TO_DATABASE, REDIS_PREFIX
+
+from utils import database as db
+
+from utils.redis_db import client as rd
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
+
+SCORES_LIFETIME = 3600
 
 
 def upload_scores(score_type="top"):  # for cron
@@ -35,26 +43,26 @@ def upload_scores(score_type="top"):  # for cron
         }
 
         counter += 1
-        response += rp.main(single_response) + "|"
+        response += resp_proc(single_response) + "|"
 
-    mc.client.set(f"CT:top:{score_type}", response, MEMCACHE_LIFETIME)
+    rd.set(f"{REDIS_PREFIX}:top:{score_type}", response, SCORES_LIFETIME)
 
     return response
 
 
 @score.route(f"{PATH_TO_DATABASE}/getGJScores20.php", methods=("POST", "GET"))
 def get_scores():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    score_type = rg.main("type")
+    score_type = request_get("type")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "1"
@@ -63,9 +71,9 @@ def get_scores():
         score_type = "top"
 
     if score_type != "friends":
-        cache = mc.client.get(f"CT:top:{score_type}")
+        cache = rd.get(f"{REDIS_PREFIX}:top:{score_type}")
         if cache is not None:
-            return cache.decode()
+            return cache
 
     query = {"is_top_banned": 0}
 
@@ -107,9 +115,9 @@ def get_scores():
         }
 
         counter += 1
-        response += rp.main(single_response) + "|"
+        response += resp_proc(single_response) + "|"
 
     if score_type != "friends":
-        mc.client.set(f"CT:top:{score_type}", response, MEMCACHE_LIFETIME)
+        rd.set(f"{REDIS_PREFIX}:top:{score_type}", response, SCORES_LIFETIME)
 
     return response

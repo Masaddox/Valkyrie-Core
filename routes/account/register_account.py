@@ -2,34 +2,46 @@ import uuid
 from time import time
 from . import account
 from threading import Thread
-from utils import check_secret, mail_sender, regex, last_id, passwd, \
-    request_get as rg, database as db, memcache as mc
-from config import PATH_TO_DATABASE, ACCOUNTS_ACTIVATION_VIA_MAIL, GD_SERVER_NAME, DOMAIN
+
+from config import (
+    PATH_TO_DATABASE, ACCOUNTS_ACTIVATION_VIA_MAIL,
+    GD_SERVER_NAME, DOMAIN, REDIS_PREFIX
+)
+
+from utils import database as db
+
+from utils.last_id import last_id
+from utils.regex import char_clean
+from utils.redis_db import client as rd
+from utils.mail_sender import mail_sender
+from utils.passwd import password_hashing
+from utils.request_get import request_get
+from utils.check_secret import check_secret
 
 
-whitelist_emails = ["gmail.com", "ya.ru", "yandex.by", "yandex.com",
+WHITELIST = True
+WHITELIST_EMAILS = ["gmail.com", "ya.ru", "yandex.by", "yandex.com",
                     "yandex.kz", "yandex.ru", "mail.ru", "internet.ru",
                     "bk.ru", "inbox.ru", "list.ru"]
-whitelist = True
 
 
 @account.route(f"{PATH_TO_DATABASE}/accounts/registerGJAccount.php", methods=("POST", "GET"))
 def register_account():
-    if not check_secret.main(
-        rg.main("secret"), 0
+    if not check_secret(
+        request_get("secret"), 0
     ):
         return "-1"
 
-    username = regex.char_clean(rg.main("userName"))
-    password = rg.main("password")
-    email = rg.main("email")
+    username = char_clean(request_get("userName"))
+    password = request_get("password")
+    email = request_get("email")
 
     if len(username) > 15 or len(password) > 20 or \
        len(email) > 32:
         return "-1"
 
-    if whitelist:
-        if email.split("@")[1].lower() not in whitelist_emails:
+    if WHITELIST:
+        if email.split("@")[1].lower() not in WHITELIST_EMAILS:
             return "-1"
 
     if db.account.count_documents(
@@ -40,7 +52,7 @@ def register_account():
     ) == 1:
         return "-1"
 
-    account_id = last_id.main(db.account)
+    account_id = last_id(db.account)
 
     if ACCOUNTS_ACTIVATION_VIA_MAIL:
         code = str(uuid.uuid4())
@@ -51,15 +63,15 @@ def register_account():
             "body": f"Your username: {username}\nAccount activation link: {DOMAIN}/activate_account?code={code}"
         }
 
-        sending_message = Thread(target=mail_sender.main, args=(message_data,))
+        sending_message = Thread(target=mail_sender, args=(message_data,))
         sending_message.start()
 
-        mc.client.set(f"CT:{code}:confirm", account_id, 3600)
+        rd.set(f"{REDIS_PREFIX}:{code}:confirm", account_id, 3600)
 
     sample_account = {
         "_id": account_id,
         "username": username,
-        "password": passwd.password_hashing(password),
+        "password": password_hashing(password),
         "email": email,
         "discord_id": 0,
         "date": int(time()),

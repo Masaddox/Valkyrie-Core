@@ -1,10 +1,19 @@
-from config import MEMCACHE_LIFETIME
+from config import REDIS_PREFIX
 from bcrypt import hashpw, gensalt, checkpw
-from utils import encoding, request_get, database as db, memcache as mc
+
+from utils import database as db
+
+from utils.xor import xor
+from utils.request_get import get_ip
+from utils.redis_db import client as rd
+from utils.base64_dec_and_enc import base64_decode
+
+
+PASSWORD_TIMELINE = 3600
 
 
 def decoding_gjp(gjp):
-    return encoding.xor(encoding.base64_decode(gjp), "37526")
+    return xor(base64_decode(gjp), "37526")
 
 
 def password_hashing(password):
@@ -14,9 +23,9 @@ def password_hashing(password):
 def check_password(account_id, password, ip=None,
                    is_gjp=True, is_check_valid=True, fast_mode=True):
     if fast_mode:
-        ip = request_get.ip() if ip is None else ip
+        ip = get_ip() if ip is None else ip
 
-        if mc.client.get(f"CT:{account_id}:passwd") == ip.encode():
+        if rd.get(f"{REDIS_PREFIX}:{account_id}:passwd") == ip:
             return True
 
     if account_id <= 0 or account_id is None:
@@ -45,7 +54,7 @@ def check_password(account_id, password, ip=None,
             db.account.find_one({"_id": account_id})["password"].encode()
         ):
             if is_check_valid and fast_mode:
-                mc.client.set(f"CT:{account_id}:passwd", ip, MEMCACHE_LIFETIME)
+                rd.set(f"{REDIS_PREFIX}:{account_id}:passwd", ip, PASSWORD_TIMELINE)
             return True
         else:
             return False

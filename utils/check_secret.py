@@ -3,7 +3,7 @@ all_secrets = [
 ]
 
 
-def main(secret, type_secret):
+def check_secret(secret, type_secret):
     if secret == all_secrets[type_secret]:
         return True
     else:

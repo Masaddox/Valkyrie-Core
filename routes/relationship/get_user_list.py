@@ -1,23 +1,28 @@
 from . import relationship
 from pymongo import ASCENDING
 from config import PATH_TO_DATABASE
-from utils import check_secret, passwd, request_get as rg, \
-    database as db, response_processing as rp
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
 
 
 @relationship.route(f"{PATH_TO_DATABASE}/getGJUserList20.php", methods=("POST", "GET"))
 def get_user_list():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
     
-    list_type = rg.main("type", "int")
+    list_type = request_get("type", "int")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "-1"
@@ -46,7 +51,7 @@ def get_user_list():
             15: glow, 16: user["_id"], 18: user["message_state"], 41: ""
         }
 
-        response += rp.main(single_response) + "|"
+        response += resp_proc(single_response) + "|"
 
     response = response[:-1]
 

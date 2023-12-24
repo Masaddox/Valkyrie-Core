@@ -1,13 +1,18 @@
 from . import level_pack
 from config import PATH_TO_DATABASE
-from utils import check_secret, request_get as rg, \
-    database as db, level_hashing as lh, response_processing as rp
+
+from utils import database as db
+
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.level_hashing import return_hash
+from utils.response_processing import resp_proc
 
 
 @level_pack.route(f"{PATH_TO_DATABASE}/getGJGauntlets21.php", methods=("POST", "GET"))
 def get_gauntlets():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "1"
 
@@ -22,8 +27,8 @@ def get_gauntlets():
         }
 
         hash_string += f"{gn['_id']}{gn['levels']}"
-        response += rp.main(single_response) + "|"
+        response += resp_proc(single_response) + "|"
 
-    response = response[:-1] + f"#{lh.return_hash(hash_string)}"
+    response = response[:-1] + f"#{return_hash(hash_string)}"
 
     return response

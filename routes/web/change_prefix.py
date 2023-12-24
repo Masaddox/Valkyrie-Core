@@ -1,8 +1,13 @@
 from . import web
 from config import HCAPTCHA_SITE_KEY
 from flask import render_template, request
-from utils import passwd, regex, hcaptcha as hc, \
-    database as db, request_get as rg
+
+from utils import database as db
+
+from utils.regex import char_clean
+from utils.hcaptcha import hcaptcha
+from utils.passwd import check_password
+from utils.request_get import request_get
 
 
 @web.route("/change_prefix", methods=("POST", "GET"))
@@ -10,10 +15,10 @@ def change_prefix():
     message = ""
 
     try:
-        login = regex.char_clean(rg.main("login"))
-        password = rg.main("password")
+        login = char_clean(request_get("login"))
+        password = request_get("password")
 
-        prefix = rg.main("prefix")
+        prefix = request_get("prefix")
 
         if request.method != "POST":
             raise
@@ -26,7 +31,7 @@ def change_prefix():
             message = "Prefix exceeds 20 characters!"
             raise
 
-        if not hc.hcaptcha.verify():
+        if not hcaptcha.verify():
             message = "Captcha failed!"
             raise
 
@@ -40,7 +45,7 @@ def change_prefix():
         else:
             account_id = account_id[0]["_id"]
 
-        if not passwd.check_password(
+        if not check_password(
             account_id, password, is_gjp=False
         ):
             message = "Incorrect login or password!"

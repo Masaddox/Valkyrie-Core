@@ -1,7 +1,12 @@
 from . import web
 from time import time
+from config import REDIS_PREFIX
 from routes.score.get_scores import upload_scores
-from utils import limit_check, database as db, memcache as mc
+
+from utils import database as db
+
+from utils.redis_db import client as rd
+from utils.limit_check import limit_check
 
 
 @web.route("/cron/<task>/<key>", methods=("POST", "GET"))
@@ -91,7 +96,7 @@ def cron(task, key):
                 max_silver_coins += level["coins"] if level["is_silver_coins"] == 1 else 0
 
         for user in users:
-            if not limit_check.main(
+            if not limit_check(
                 (user["stars"], max_stars), (user["demons"], max_demons),
                 (user["user_coins"], max_silver_coins), (user["secret_coins"], max_gold_coins)
             ):
@@ -101,7 +106,7 @@ def cron(task, key):
 
         """ Обновление поля global_rank у игроков """
 
-        top_list = mc.client.get("CT:top:top")
+        top_list = rd.get(f"{REDIS_PREFIX}:top:top")
 
         if top_list is None:
             top_list = upload_scores()

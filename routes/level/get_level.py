@@ -2,8 +2,15 @@ from . import level
 from time import time
 from config import PATH_TO_DATABASE
 from pymongo import DESCENDING, ASCENDING
-from utils import passwd, check_secret, level_hashing, difficulty_converter as dc, \
-    response_processing as rp, request_get as rg, database as db
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.level_hashing import return_hash
+from utils.response_processing import resp_proc
+from utils.difficulty_converter import demon_conv
 
 
 def bool_chk(x): return x == "1"
@@ -20,40 +27,40 @@ def int_conv(x):
 
 @level.route(f"{PATH_TO_DATABASE}/getGJLevels21.php", methods=("POST", "GET"))
 def get_level():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    gauntlet = rg.main("gauntlet", "int")
+    gauntlet = request_get("gauntlet", "int")
     gauntlet_bool = "" if gauntlet <= 0 else "1"
 
-    demon_filter = rg.main("demonFilter", "int")
-    difficulty = rg.main("diff")
-    type_pack = rg.main("type")
-    search = rg.main("str")
-    long = rg.main("len")
+    demon_filter = request_get("demonFilter", "int")
+    difficulty = request_get("diff")
+    type_pack = request_get("type")
+    search = request_get("str")
+    long = request_get("len")
 
-    star = rg.main("star")
-    no_star = rg.main("noStar")
-    featured = rg.main("featured")
-    epic = rg.main("epic")
-    original = rg.main("original")
-    two_player = rg.main("twoPlayer")
-    silver_coins = rg.main("coins")
+    star = request_get("star")
+    no_star = request_get("noStar")
+    featured = request_get("featured")
+    epic = request_get("epic")
+    original = request_get("original")
+    two_player = request_get("twoPlayer")
+    silver_coins = request_get("coins")
 
-    song_id = rg.main("song")
-    is_custom_song = rg.main("customSong")
+    song_id = request_get("song")
+    is_custom_song = request_get("customSong")
 
-    uncompleted = rg.main("uncompleted", "int")
-    only_completed = rg.main("onlyCompleted", "int")
-    completed_levels = rg.main("completedLevels")
+    uncompleted = request_get("uncompleted", "int")
+    only_completed = request_get("onlyCompleted", "int")
+    completed_levels = request_get("completedLevels")
 
-    page = rg.main("page", "int")
-    followed = rg.main("followed")
+    page = request_get("page", "int")
+    followed = request_get("followed")
 
     query = {
         "unlisted": 0,
@@ -75,7 +82,7 @@ def get_level():
         if bool_chk(featured):
             query["featured"] = 1
             query["epic"] = 0
-        if bool_chk(epic):
+        if bool_chk(epic):  # ENCROACHING DARK
             query["epic"] = 1
         if bool_chk(original):
             query["original_id"] = 0
@@ -140,7 +147,7 @@ def get_level():
 
         elif type_pack == "5":  # Уровни игрока
             if int_conv(search) == account_id:
-                if passwd.check_password(account_id, password):
+                if check_password(account_id, password):
                     query.pop("unlisted")
             sort = [("_id", DESCENDING)]
             query["account_id"] = int_conv(search)
@@ -210,13 +217,13 @@ def get_level():
         single_response = {
             1: lvl["_id"], 2: lvl["name"], 5: lvl["version"], 6: lvl["account_id"],
             8: dd, 9: diff, 10: lvl["downloads"], 12: official_song_id, 13: 21,
-            14: lvl["likes"], 17: demon, 43: dc.demon_conv(lvl["demon_type"]), 25: auto,
+            14: lvl["likes"], 17: demon, 43: demon_conv(lvl["demon_type"]), 25: auto,
             18: lvl["stars"], 19: lvl["featured"], 42: lvl["epic"], 45: lvl["objects"], 3: lvl["desc"],
             15: lvl["length"], 30: lvl["original_id"], 31: lvl["two_player"], 37: lvl["coins"],
             38: lvl["is_silver_coins"], 39: 0, 46: 1, 47: 2, 35: non_official_song_id, 44: gauntlet_bool
         }
 
-        response += rp.main(single_response) + "|"
+        response += resp_proc(single_response) + "|"
     else:
         response = response[:-1] + "#"
 
@@ -238,11 +245,11 @@ def get_level():
                 4: song_info[0]["artist_name"], 5: "{0:.2f}".format(song_info[0]["size"]),
                 6: "", 10: song_info[0]["link"], 7: "", 8: 0
             }
-            response += rp.main(single_song, 3)[:-1] + ":~"
+            response += resp_proc(single_song, 3)[:-1] + ":~"
     else:
         if response[-2:] == ":~":
             response = response[:-2]
 
-    response += f"#{db.level.count_documents(query)}:{offset}:10#{level_hashing.return_hash(hash_string)}"
+    response += f"#{db.level.count_documents(query)}:{offset}:10#{return_hash(hash_string)}"
 
     return response

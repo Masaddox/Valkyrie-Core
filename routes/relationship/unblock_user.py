@@ -1,25 +1,29 @@
 from . import relationship
 from config import PATH_TO_DATABASE
-from utils import check_secret, passwd, \
-    request_get as rg, database as db
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
 
 
 @relationship.route(f"{PATH_TO_DATABASE}/unblockGJUser20.php", methods=("POST", "GET"))
 def unblock_user():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "1"
 
-    target_id = rg.main("targetAccountID", "int")
+    target_id = request_get("targetAccountID", "int")
 
     if account_id == target_id:
         return "1"

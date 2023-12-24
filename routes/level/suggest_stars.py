@@ -2,27 +2,32 @@ from . import level
 from time import time
 from flask import abort
 from config import PATH_TO_DATABASE
-from utils import passwd, check_secret, request_get as rg, \
-    database as db, difficulty_converter as dc
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.difficulty_converter import diff_conv
 
 
 @level.route(f"{PATH_TO_DATABASE}/suggestGJStars.php", methods=("POST", "GET"))
 @level.route(f"{PATH_TO_DATABASE}/suggestGJStars20.php", methods=("POST", "GET"))
 def suggest_stars():
-    if not check_secret.main(
-        rg.main("secret"), 3
+    if not check_secret(
+        request_get("secret"), 3
     ):
         abort(500)
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    level_id = rg.main("levelID", "int")
+    level_id = request_get("levelID", "int")
 
-    stars = rg.main("stars", "int")
-    featured = rg.main("feature", "int")
+    stars = request_get("stars", "int")
+    featured = request_get("feature", "int")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         abort(500)
@@ -72,7 +77,7 @@ def suggest_stars():
                 "stars": stars,
                 "demon": 0,
                 "demon_type": 0,
-                "difficulty": dc.diff_conv(stars)
+                "difficulty": diff_conv(stars)
             })
         elif stars == 10:
             query_level.update({

@@ -1,7 +1,7 @@
 import time
 
 
-def main(timestamp):
+def time_conv(timestamp):
     time_now = int(time.time())
     time_interval = time_now - timestamp
 

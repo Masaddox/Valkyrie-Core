@@ -1,4 +1,4 @@
-def main(*args):
+def limit_check(*args):
     for arg in args:
         if 0 <= arg[0] <= arg[1]:
             continue

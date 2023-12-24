@@ -2,9 +2,14 @@
 /__pycache__
 /.idea
 /test
+
 *.mp3
 *.level
 *.account
 *.old.level
 *.old.level.db
 *.log
+
+*.env
+*.pem
+*.bat

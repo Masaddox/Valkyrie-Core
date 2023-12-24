@@ -2,7 +2,7 @@ import re
 from flask import request
 
 
-def main(arg, arg_type="str"):
+def request_get(arg, arg_type="str"):
     received_data = request.values.get(arg)
 
     if received_data is None:
@@ -25,5 +25,5 @@ def main(arg, arg_type="str"):
         return ""
 
 
-def ip():
+def get_ip():
     return request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr).split(",")[0]

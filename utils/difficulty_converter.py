@@ -1,4 +1,4 @@
-demon_type_dict = {
+DEMON_TYPE_DICT = {
     0: 0,
     1: 3,
     2: 4,
@@ -7,7 +7,7 @@ demon_type_dict = {
     5: 6
 }
 
-difficulty_type_dict = {
+DIFFICULTY_TYPE_DICT = {
     1: 1,
     2: 1,
     3: 2,
@@ -22,8 +22,8 @@ difficulty_type_dict = {
 
 
 def demon_conv(demon_type):
-    return demon_type_dict[int(demon_type)]
+    return DEMON_TYPE_DICT[int(demon_type)]
 
 
 def diff_conv(diff_type):
-    return difficulty_type_dict[int(diff_type)]
+    return DIFFICULTY_TYPE_DICT[int(diff_type)]

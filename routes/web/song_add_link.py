@@ -3,11 +3,18 @@ from . import web
 from time import time
 from flask import render_template, request
 from config import HCAPTCHA_SITE_KEY, GD_SERVER_NAME
-from utils import last_id, passwd, regex, hcaptcha as hc, \
-    database as db, request_get as rg, request_limiter as rl
+
+from utils import database as db
+
+from utils.last_id import last_id
+from utils.hcaptcha import hcaptcha
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.request_limiter import request_limiter
+from utils.regex import char_clean, clear_prohibited_chars
 
 
-time_out = [600, 180]
+time_out = [600, 180]  # Second
 
 
 @web.route("/song_add/link", methods=("POST", "GET"))
@@ -15,19 +22,19 @@ def song_add_link():
     message = ""
 
     try:
-        login = regex.char_clean(rg.main("login"))
-        password = rg.main("password")
+        login = char_clean(request_get("login"))
+        password = request_get("password")
 
         if request.method != "POST":
             raise
 
-        song_link = rg.main("song_link", "link")
+        song_link = request_get("song_link", "link")
 
         if len(login) > 15 or len(password) > 20:
             message = "Incorrect login or password!"
             raise
 
-        if not hc.hcaptcha.verify():
+        if not hcaptcha.verify():
             message = "Captcha failed!"
             raise
 
@@ -49,7 +56,7 @@ def song_add_link():
         else:
             account_id = account_id[0]["_id"]
 
-        if not passwd.check_password(
+        if not check_password(
             account_id, password, is_gjp=False
         ):
             message = "Incorrect login or password!"
@@ -57,7 +64,7 @@ def song_add_link():
 
         vip_status = db.account_stat.find_one({"_id": account_id})["vip_status"]
 
-        if not rl.main(
+        if not request_limiter(
             db.song, {"account_id": account_id, "is_local_storage": 0},
             limit_time=time_out[vip_status]
         ):
@@ -71,7 +78,7 @@ def song_add_link():
         song_link = song_link.replace(" ", "_")
         song_link = song_link.replace("%20", "_")
 
-        if regex.clear_prohibited_chars(song_link.split("/")[-1:][0]) != song_link.split("/")[-1:][0]:
+        if clear_prohibited_chars(song_link.split("/")[-1:][0]) != song_link.split("/")[-1:][0]:
             message = "There are invalid characters in the song name! " \
                       "(try renaming the song with letters and numbers only.)"
             raise
@@ -95,13 +102,13 @@ def song_add_link():
 
         filename = f.headers["Content-Disposition"].split(";")
         filename = filename[1].partition('=\"')[2].partition('.mp3')[0]
-        filename = regex.clear_prohibited_chars(filename)
+        filename = clear_prohibited_chars(filename)
 
         if len(filename) > 84:
             message = "Song name is more than 84 characters!"
             raise
 
-        song_id = last_id.main(db.song)
+        song_id = last_id(db.song)
 
         db.song.insert_one({
             "_id": song_id,

@@ -1,0 +1,1 @@
+* Friends and relative in *get_scores.py*

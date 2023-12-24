@@ -1,4 +1,4 @@
-def main(resp_dict, type_proc=1):
+def resp_proc(resp_dict, type_proc=1):
     response_string = ""
     sep = ""  # separator
 

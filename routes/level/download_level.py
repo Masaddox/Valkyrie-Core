@@ -4,15 +4,24 @@ from os.path import join
 from threading import Thread
 from pymongo import DESCENDING
 from config import PATH_TO_DATABASE, PATH_TO_ROOT
-from utils import check_secret, passwd, response_processing as rp, encoding as enc,\
-    difficulty_converter as dc, level_hashing as lh, request_get as rg, database as db
+
+from utils import database as db
+
+from utils.xor import xor
+from utils.passwd import check_password
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
+from utils.request_get import request_get, get_ip
+from utils.difficulty_converter import demon_conv
+from utils.base64_dec_and_enc import base64_encode
+from utils.level_hashing import return_hash, return_hash2
 
 
 def update_download_counter(level_id, account_id, password, ip):
     is_first_download = False
 
     if account_id > 0:
-        if passwd.check_password(account_id, password):
+        if check_password(account_id, password):
             if db.action_download.count_documents({
                 "level_id": level_id, "account_id": account_id
             }) == 0:
@@ -39,12 +48,12 @@ def update_download_counter(level_id, account_id, password, ip):
 
 @level.route(f"{PATH_TO_DATABASE}/downloadGJLevel22.php", methods=("POST", "GET"))
 def download_level():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    level_id = rg.main("levelID", "int")
+    level_id = request_get("levelID", "int")
 
     featured_id = 0
     is_featured = False
@@ -94,10 +103,10 @@ def download_level():
         single_response = {
             1: i["_id"], 2: i["name"], 3: i["desc"], 4: level_string, 5: i["version"],
             6: i["account_id"], 8: dd, 9: difficulty, 10: i["downloads"], 12: official_song_id, 13: 21,
-            14: i["likes"], 17: demon, 43: dc.demon_conv(i["demon_type"]), 25: auto, 18: i["stars"],
+            14: i["likes"], 17: demon, 43: demon_conv(i["demon_type"]), 25: auto, 18: i["stars"],
             19: i["featured"], 42: i["epic"], 45: i["objects"], 15: i["length"], 30: i["original_id"],
             31: i["two_player"], 28: 0, 29: 0, 35: custom_song_id, 36: i["extra_string"], 37: i["coins"],
-            38: i["is_silver_coins"], 39: 0, 46: 0, 47: 0, 40: ldm, 27: enc.base64_encode(enc.xor(str(
+            38: i["is_silver_coins"], 39: 0, 46: 0, 47: 0, 40: ldm, 27: base64_encode(xor(str(
                 i["password"]), "26364"))
         }
 
@@ -108,14 +117,14 @@ def download_level():
         hash_string = f"{i['account_id']},{i['stars']},{i['demon']},{i['_id']},{i['is_silver_coins']}," \
                       f"{i['featured']},{i['password']},{featured_id}"
 
-        response = rp.main(single_response) + f"#{lh.return_hash2(level_string)}#{lh.return_hash(hash_string)}"
+        response = resp_proc(single_response) + f"#{return_hash2(level_string)}#{return_hash(hash_string)}"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
     th = Thread(name="update_download_counter",
                 target=update_download_counter,
-                args=(level_id, account_id, password, rg.ip()))
+                args=(level_id, account_id, password, get_ip()))
     th.start()
 
     return response + user_info

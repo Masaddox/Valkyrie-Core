@@ -1,23 +1,32 @@
 from . import misc
 from os.path import join
 from sys import getsizeof
-from config import PATH_TO_ROOT
-from utils import passwd, regex, check_secret, request_get as rg, \
-    database as db, memcache as mc
+from config import PATH_TO_ROOT, REDIS_PREFIX
+
+from utils import database as db
+
+from utils.regex import char_clean
+from utils.redis_db import client as rd
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
 
 
-max_size = [15728640, 52428800]  # no vip, vip
+MAX_SIZE = [  # no vip, vip
+    15 * 1024 * 1024,
+    50 * 1024 * 1024
+]
 
 
 @misc.route("/database/accounts/backupGJAccountNew.php", methods=("POST", "GET"))
 def backup_account():
-    if not check_secret.main(
-        rg.main("secret"), 0
+    if not check_secret(
+        request_get("secret"), 0
     ):
         return "-1"
 
-    username = regex.char_clean(rg.main("userName"))
-    password = rg.main("password")
+    username = char_clean(request_get("userName"))
+    password = request_get("password")
 
     try:
         account_id = db.account_stat.find_one(
@@ -27,26 +36,26 @@ def backup_account():
     except KeyError:
         return "-1"
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password, is_gjp=False, fast_mode=False
     ):
         return "-1"
 
-    if mc.client.get(f"CT:{account_id}:backup") == "1".encode():  # Проверка на тайм аут
+    if rd.get(f"{REDIS_PREFIX}:{account_id}:backup") == "1":  # Проверка на тайм аут
         return "-1"
 
-    save_data = rg.main("saveData")
+    save_data = request_get("saveData")
 
     vip_status = db.account_stat.find_one({"_id": account_id})["vip_status"]
 
-    if getsizeof(save_data) > max_size[vip_status]:
+    if getsizeof(save_data) > MAX_SIZE[vip_status]:
         return "-1"
 
     with open(join(
-        PATH_TO_ROOT, "data", "account_backup", f"{account_id}.account"
+        PATH_TO_ROOT, "data", "account", f"{account_id}.account"
     ), "w") as file:
         file.write(save_data)
 
-    mc.client.set(f"CT:{account_id}:backup", "1", 60)  # Тайм аут 60 секунд
+    rd.set(f"{REDIS_PREFIX}:{account_id}:backup", "1", 60)  # Тайм аут 60 секунд
 
     return "1"

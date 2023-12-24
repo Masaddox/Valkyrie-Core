@@ -1,25 +1,31 @@
 from . import message
 from config import PATH_TO_DATABASE
-from utils import check_secret, passwd, request_get as rg, \
-    database as db, time_converter as tc, response_processing as rp
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.time_converter import time_conv
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
 
 
 @message.route(f"{PATH_TO_DATABASE}/downloadGJMessage20.php", methods=("POST", "GET"))
 def download_message():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "-1"
 
-    message_id = rg.main("messageID", "int")
+    message_id = request_get("messageID", "int")
 
     try:
         msg = db.message.find({"_id": message_id})[0]
@@ -51,9 +57,9 @@ def download_message():
     response = {
         6: user_info["username"], 3: user_info["_id"], 2: user_info["_id"],
         1: message_id, 4: msg["subject"], 8: is_read, 9: is_sender, 5: msg["body"],
-        7: prefix + tc.main(msg["upload_time"])
+        7: prefix + time_conv(msg["upload_time"])
     }
 
-    response = rp.main(response)
+    response = resp_proc(response)
 
     return response

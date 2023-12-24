@@ -4,7 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from config import MAIL_USERNAME, MAIL_PASSWORD, MAIL_SERVER
 
 
-def main(data):
+def mail_sender(data):
     msg = MIMEMultipart()
 
     msg['From'] = MAIL_USERNAME

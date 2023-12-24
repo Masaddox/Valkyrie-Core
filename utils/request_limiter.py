@@ -1,7 +1,7 @@
 from time import time
 
 
-def main(coll, query, main_id="_id", date="upload_time", limit_time=60):
+def request_limiter(coll, query, main_id="_id", date="upload_time", limit_time=60):
     try:
         last_loaded = tuple(coll.find(query).sort(main_id, -1).limit(1))
 

@@ -1,17 +1,21 @@
 from . import misc
 from config import PATH_TO_DATABASE
-from utils import check_secret, request_get as rg, \
-    database as db, response_processing as rp
+
+from utils import database as db
+
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
 
 
 @misc.route(f"{PATH_TO_DATABASE}/getGJSongInfo.php", methods=("POST", "GET"))
 def get_song_info():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    song_id = rg.main("songID", "int")
+    song_id = request_get("songID", "int")
 
     if db.song.count_documents({
         "_id": song_id
@@ -27,6 +31,6 @@ def get_song_info():
         6: "", 10: song_info["link"], 7: "", 8: 0
     }
 
-    response += rp.main(single_song, 3)[:-2]
+    response += resp_proc(single_song, 3)[:-2]
 
     return response

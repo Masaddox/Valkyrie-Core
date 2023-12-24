@@ -1,21 +1,30 @@
 from . import web
 from flask import request, render_template
-from utils import request_get, regex, passwd, \
-    hcaptcha as hc, database as db, memcache as mc
-from config import HCAPTCHA_SITE_KEY, ACCOUNTS_ACTIVATION_VIA_MAIL
+from config import (
+    HCAPTCHA_SITE_KEY, ACCOUNTS_ACTIVATION_VIA_MAIL, REDIS_PREFIX
+)
+
+from utils import database as db
+
+from utils.regex import char_clean
+from utils.hcaptcha import hcaptcha
+from utils.redis_db import client as rd
+from utils.passwd import check_password
+from utils.request_get import request_get
 
 
 @web.route("/activate_account", methods=("POST", "GET"))
 def activate_account():
     message = ""
+    code = ""
 
     if ACCOUNTS_ACTIVATION_VIA_MAIL:
-        code = request_get.main("code")
+        code = request_get("code")
 
         if code is None:
             return "Code is invalid!"
 
-        account_id = mc.client.get(f"CT:{code}:confirm")
+        account_id = rd.get(f"{REDIS_PREFIX}:{code}:confirm")
 
         if account_id is None:
             return "Code is invalid!"
@@ -23,7 +32,7 @@ def activate_account():
         account_id = int(account_id.decode())
     else:
         try:
-            username = regex.char_clean(request_get.main('login'))
+            username = char_clean(request_get('login'))
             account_id = db.account.find(
                 {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
         except:
@@ -32,9 +41,9 @@ def activate_account():
 
     try:
         if request.method == "POST":
-            password = request_get.main("password")
+            password = request_get("password")
 
-            if not hc.hcaptcha.verify():
+            if not hcaptcha.verify():
                 message = "Captcha failed!"
                 raise
 
@@ -44,7 +53,7 @@ def activate_account():
                 message = "Account already verified!"
                 raise
 
-            if not passwd.check_password(
+            if not check_password(
                 account_id, password,
                 is_gjp=False, is_check_valid=False, fast_mode=False
             ):
@@ -65,7 +74,7 @@ def activate_account():
             db.account_stat.insert_one(sample_account_stat)
 
             if ACCOUNTS_ACTIVATION_VIA_MAIL:
-                mc.client.delete(f"CT:{code}:confirm")
+                rd.delete(f"CT:{code}:confirm")
 
             return "Account verified!"
         else:

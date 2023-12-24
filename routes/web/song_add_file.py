@@ -5,13 +5,23 @@ from time import time
 from uuid import uuid4
 from os.path import join
 from flask import render_template, request
-from utils import last_id, passwd, regex, hcaptcha as hc, \
-    database as db, request_get as rg, request_limiter as rl
-from config import HCAPTCHA_SITE_KEY, PATH_TO_ROOT, PATH_TO_SONG, GD_SERVER_NAME
+from config import (
+    HCAPTCHA_SITE_KEY, PATH_TO_ROOT, PATH_TO_SONG,
+    GD_SERVER_NAME, DISCORD_CONFIRMATION
+)
+
+from utils import database as db
+
+from utils.last_id import last_id
+from utils.hcaptcha import hcaptcha
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.request_limiter import request_limiter
+from utils.regex import char_clean, clear_prohibited_chars
 
 
-max_size_song = [6, 20]
-time_out = [3600, 600]
+max_size_song = [6, 20]  # MB
+time_out = [3600, 600]  # Second
 
 
 @web.route("/song_add", methods=("POST", "GET"))
@@ -20,8 +30,8 @@ def song_add_file():
     message = ""
 
     try:
-        login = regex.char_clean(rg.main("login"))
-        password = rg.main("password")
+        login = char_clean(request_get("login"))
+        password = request_get("password")
 
         song_file = request.files["song_file"]
 
@@ -32,7 +42,7 @@ def song_add_file():
             message = "Incorrect login or password!"
             raise
 
-        if not hc.hcaptcha.verify():
+        if not hcaptcha.verify():
             message = "Captcha failed!"
             raise
 
@@ -50,7 +60,7 @@ def song_add_file():
         else:
             account_id = account_id[0]["_id"]
 
-        if not passwd.check_password(
+        if not check_password(
             account_id, password, is_gjp=False
         ):
             message = "Incorrect login or password!"
@@ -58,7 +68,7 @@ def song_add_file():
 
         vip_status = db.account_stat.find_one({"_id": account_id})["vip_status"]
 
-        if not rl.main(
+        if not request_limiter(
             db.song, {"account_id": account_id, "is_local_storage": 1},
             limit_time=time_out[vip_status]
         ):
@@ -66,11 +76,12 @@ def song_add_file():
             message = f"You have recently uploaded a song to the server, please wait {timeout_str}!"
             raise
 
-        # if db.account.count_documents({
-        #     "_id": account_id, "discord_id": 0
-        # }) == 1:
-        #     message = "You have not verified your account (read more on discord server)"
-        #     raise
+        if DISCORD_CONFIRMATION:
+            if db.account.count_documents({
+                "_id": account_id, "discord_id": 0
+            }) == 1:
+                message = "You have not verified your account (read more on discord server)"
+                raise
 
         song_filename = song_file.filename
 
@@ -93,11 +104,11 @@ def song_add_file():
             message = f"File weighs more than {max_size_song[vip_status]} megabytes!"
             raise
 
-        song_id = last_id.main(db.song)
+        song_id = last_id(db.song)
 
         db.song.insert_one({
             "_id": song_id,
-            "name": regex.clear_prohibited_chars(song_filename[:-4]),
+            "name": clear_prohibited_chars(song_filename[:-4]),
             "artist_name": f"{GD_SERVER_NAME} - LocalStorage",
             "account_id": account_id,
             "link": PATH_TO_SONG + f"/{song_id}.mp3",

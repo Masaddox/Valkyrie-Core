@@ -1,18 +1,23 @@
 from . import user
 from config import PATH_TO_DATABASE
-from utils import regex, check_secret, response_processing as rp, \
-    request_get as rg, database as db
+
+from utils import database as db
+
+from utils.regex import char_clean
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.response_processing import resp_proc
 
 
 @user.route(f"{PATH_TO_DATABASE}/getGJUsers20.php", methods=("POST", "GET"))
 def get_users():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    search_str = regex.char_clean(rg.main("str"))
-    page = rg.main("page", "int")
+    search_str = char_clean(request_get("str"))
+    page = request_get("page", "int")
 
     offset = page * 10
 
@@ -34,7 +39,7 @@ def get_users():
             8: i["creator_points"], 4: ["demons"]
         }
 
-        response += rp.main(single_user) + "|"
+        response += resp_proc(single_user) + "|"
 
     response = response[:-1] + f"#{db.account_stat.count_documents(query)}:{offset}:10"
 

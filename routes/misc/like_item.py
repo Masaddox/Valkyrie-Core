@@ -1,25 +1,29 @@
 from . import misc
-from utils import check_secret, passwd, \
-    request_get as rg, database as db
 from config import PATH_TO_DATABASE, PROTECTION_AGAINST_DISLIKE_BOTS
+
+from utils import database as db
+
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
 
 
 @misc.route(f"{PATH_TO_DATABASE}/likeGJItem211.php", methods=("POST", "GET"))
 def like_item():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    item_id = rg.main("itemID", "int")
-    item_type = rg.main("type", "int")
+    item_id = request_get("itemID", "int")
+    item_type = request_get("type", "int")
 
-    like = 1 if rg.main("like", "int") != 0 else -1
+    like = 1 if request_get("like", "int") != 0 else -1
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "1"

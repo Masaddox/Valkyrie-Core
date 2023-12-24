@@ -1,29 +1,35 @@
 from time import time
 from . import relationship
 from config import PATH_TO_DATABASE
-from utils import check_secret, passwd, last_id,\
-    request_get as rg, database as db, encoding as enc
+
+from utils import database as db
+
+from utils.last_id import last_id
+from utils.passwd import check_password
+from utils.request_get import request_get
+from utils.check_secret import check_secret
+from utils.base64_dec_and_enc import base64_decode
 
 
 @relationship.route(f"{PATH_TO_DATABASE}/uploadFriendRequest20.php", methods=("POST", "GET"))
 def upload_friend_request():
-    if not check_secret.main(
-        rg.main("secret"), 1
+    if not check_secret(
+        request_get("secret"), 1
     ):
         return "-1"
 
-    account_id = rg.main("accountID", "int")
-    password = rg.main("gjp")
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
 
-    recipient_id = rg.main("toAccountID", "int")
-    comment = rg.main("comment")
+    recipient_id = request_get("toAccountID", "int")
+    comment = request_get("comment")
 
-    if not passwd.check_password(
+    if not check_password(
         account_id, password
     ):
         return "-1"
 
-    if len(enc.base64_decode(comment)) > 140:
+    if len(base64_decode(comment)) > 140:
         return "-1"
 
     if account_id == recipient_id:
@@ -52,7 +58,7 @@ def upload_friend_request():
         return "-1"
 
     db.friend_req.insert_one({
-        "_id": last_id.main(db.friend_req),
+        "_id": last_id(db.friend_req),
         "account_id": account_id,
         "recipient_id": recipient_id,
         "comment": comment,
