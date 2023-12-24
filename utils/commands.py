@@ -2,8 +2,10 @@ import os
 from time import time
 from os.path import join
 from config import PATH_TO_ROOT
-from utils import regex, database as db
 from routes.level.delete_level import removal_of_residues
+
+from utils import database as db
+from utils.regex import char_clean
 
 
 def mod_commands(account_id, level_id, command):
@@ -115,7 +117,7 @@ def mod_commands(account_id, level_id, command):
             if len(level_name[:-1]) > 20:
                 return False
 
-            query_level = {"name": regex.char_clean(level_name[:-1])}
+            query_level = {"name": char_clean(level_name[:-1])}
 
         elif command_split[0] == "!setacc":
             if len(command_split) == 1:
@@ -123,7 +125,7 @@ def mod_commands(account_id, level_id, command):
 
             try:
                 user_info = db.account_stat.find({
-                    "username": {"$regex": f"^{regex.char_clean(command_split[1])}$", '$options': 'i'}
+                    "username": {"$regex": f"^{char_clean(command_split[1])}$", '$options': 'i'}
                 })[0]
             except:
                 return False

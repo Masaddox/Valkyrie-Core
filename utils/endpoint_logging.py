@@ -2,8 +2,8 @@ import json
 import uuid
 from os.path import join
 from flask import request
-from utils import request_get
 from datetime import datetime
+from utils.request_get import get_ip
 from config import PATH_TO_ROOT, LOG_STATUS
 
 
@@ -40,7 +40,7 @@ def logging(status, work_result="NONE"):
     log = {
         "status": status,
         "endpoint_path": request.path,
-        "ip": request_get.ip(),
+        "ip": get_ip(),
         "date": date,
         "data": data,
         "result": work_result
