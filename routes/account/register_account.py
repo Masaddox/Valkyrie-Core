@@ -14,9 +14,9 @@ from utils.last_id import last_id
 from utils.regex import char_clean
 from utils.redis_db import client as rd
 from utils.mail_sender import mail_sender
-from utils.passwd import password_hashing
 from utils.request_get import request_get
 from utils.check_secret import check_secret
+from utils.passwd import password_hashing, generate_gjp2
 
 
 WHITELIST = True
@@ -36,21 +36,32 @@ def register_account():
     password = request_get("password")
     email = request_get("email")
 
-    if len(username) > 15 or len(password) > 20 or \
-       len(email) > 32:
-        return "-1"
+    # == Проверка лимита длины ==
+    if len(username) < 3 or len(username) > 15:
+        return "-4"
+
+    if len(password) < 6 or len(password) > 20:
+        return "-5"
+
+    if len(email) < 5 or len(email) > 32:
+        return "-6"
+    # == ==
 
     if WHITELIST:
         if email.split("@")[1].lower() not in WHITELIST_EMAILS:
-            return "-1"
+            return "-6"
+
+    # == Существуют ли такое имя или электронная почта в базе данных ==
+    if db.account.count_documents(
+        {"username": {"$regex": f"^{username}$", '$options': 'i'}}
+    ) == 1:
+        return "-2"
 
     if db.account.count_documents(
-        {"$or": [
-            {"username": {"$regex": f"^{username}$", '$options': 'i'}},
-            {"email": {"$regex": f"^{email}$", '$options': 'i'}}
-        ]}
+        {"email": {"$regex": f"^{email}$", '$options': 'i'}}
     ) == 1:
-        return "-1"
+        return "-3"
+    # == ==
 
     account_id = last_id(db.account)
 
@@ -72,6 +83,7 @@ def register_account():
         "_id": account_id,
         "username": username,
         "password": password_hashing(password),
+        "gjp2": generate_gjp2(password, bcrypt=True),
         "email": email,
         "discord_id": 0,
         "date": int(time()),

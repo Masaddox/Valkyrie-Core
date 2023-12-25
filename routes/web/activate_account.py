@@ -17,30 +17,34 @@ from utils.request_get import request_get
 def activate_account():
     message = ""
     code = ""
-
-    if ACCOUNTS_ACTIVATION_VIA_MAIL:
-        code = request_get("code")
-
-        if code is None:
-            return "Code is invalid!"
-
-        account_id = rd.get(f"{REDIS_PREFIX}:{code}:confirm")
-
-        if account_id is None:
-            return "Code is invalid!"
-
-        account_id = int(account_id.decode())
-    else:
-        try:
-            username = char_clean(request_get('login'))
-            account_id = db.account.find(
-                {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
-        except:
-            message = "Wrong login!"
-            raise
+    account_id = 0
 
     try:
+        if ACCOUNTS_ACTIVATION_VIA_MAIL:
+
+            code = request_get("code")
+
+            if code is None:
+                return "Code is invalid!"
+
+            account_id = rd.get(f"{REDIS_PREFIX}:{code}:confirm")
+
+            if account_id is None:
+                return "Code is invalid!"
+
+            account_id = int(account_id.decode())
+
         if request.method == "POST":
+
+            if not ACCOUNTS_ACTIVATION_VIA_MAIL:
+                try:
+                    username = char_clean(request_get('login'))
+                    account_id = db.account.find_one(
+                        {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
+                except:
+                    message = "Wrong login!"
+                    raise
+
             password = request_get("password")
 
             if not hcaptcha.verify():
@@ -55,7 +59,7 @@ def activate_account():
 
             if not check_password(
                 account_id, password,
-                is_gjp=False, is_check_valid=False, fast_mode=False
+                is_gjp=False, is_check_valid=False, fast_mode=False, is_gjp2=False
             ):
                 message = "Wrong password!"
                 raise
@@ -74,7 +78,7 @@ def activate_account():
             db.account_stat.insert_one(sample_account_stat)
 
             if ACCOUNTS_ACTIVATION_VIA_MAIL:
-                rd.delete(f"CT:{code}:confirm")
+                rd.delete(f"{REDIS_PREFIX}:{code}:confirm")
 
             return "Account verified!"
         else:

@@ -19,7 +19,7 @@ def login_account():
     login_attempts = rd.get(f"{REDIS_PREFIX}:{ip}:login")
 
     if login_attempts is not None:
-        login_attempts = int(login_attempts.decode())
+        login_attempts = int(login_attempts)
         if login_attempts >= 8:
             return "-12"
 
@@ -31,15 +31,30 @@ def login_account():
     username = char_clean(request_get("userName"))
     password = request_get("password")
 
-    if len(username) > 15 or len(password) > 20:
-        return "-1"
+    is_gjp2 = False
+
+    if 3 > len(username) > 15:
+        return "-11"
+
+    # == Проверка длин паролей у разных версий (2.1 - 2.2) ==
+    if request_get("gjp2") != "":  # >= 2.2
+        password = request_get("gjp2")
+        is_gjp2 = True
+
+        if len(password) != 40:
+            return "-1"
+
+    else:  # <= 2.1
+        if len(password) > 20:
+            return "-11"
+    # == ==
 
     try:
         account_id = db.account.find_one(
             {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
 
         if not check_password(
-            account_id, password, is_gjp=False, fast_mode=False
+            account_id, password, is_gjp=False, fast_mode=False, is_gjp2=is_gjp2
         ):
             raise
     except:
@@ -47,6 +62,6 @@ def login_account():
             rd.set(f"{REDIS_PREFIX}:{ip}:login", 0, LOGIN_ATTEMPTS_TIMELINE)
 
         rd.incr(f"{REDIS_PREFIX}:{ip}:login", 1)
-        return "-1"
+        return "-11"
 
     return f"{account_id},{account_id}"
