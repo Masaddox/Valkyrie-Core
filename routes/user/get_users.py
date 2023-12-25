@@ -38,9 +38,7 @@ def get_users():
             10: i["first_color"], 11: i["second_color"], 14: i["icon_type"], 15: 0, 16: i["_id"], 3: i["stars"],
             8: i["creator_points"], 4: ["demons"]
         }
-
         response += resp_proc(single_user) + "|"
 
     response = response[:-1] + f"#{db.account_stat.count_documents(query)}:{offset}:10"
-
     return response

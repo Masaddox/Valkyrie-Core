@@ -1,6 +1,7 @@
 from config import *
 from pymongo import MongoClient
 
+
 db = MongoClient(MONGO_URI)
 current_db = db[MONGO_NAME]
 

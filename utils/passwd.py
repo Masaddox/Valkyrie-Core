@@ -1,5 +1,4 @@
 import hashlib
-from icecream import ic
 from config import REDIS_PREFIX
 from bcrypt import hashpw, gensalt, checkpw
 
@@ -36,32 +35,26 @@ def check_password(account_id, password, ip=None,
         ip = get_ip() if ip is None else ip
 
         if rd.get(f"{REDIS_PREFIX}:{account_id}:passwd") == ip:
-            ic()
             return True
 
     if account_id <= 0 or account_id is None:
-        ic()
         return False
 
     if len(password) > 100:
-        ic()
         return False
 
     if db.account.count_documents(
         {"_id": account_id, "is_banned": 1}
     ) == 1:
-        ic()
         return False
 
     if is_check_valid:
         if db.account.count_documents({
             "_id": account_id, "is_valid": 0
         }) == 1:
-            ic()
             return False
 
     if is_gjp:
-        ic()
         is_gjp2 = False
         password = decoding_gjp(password)
 
@@ -72,13 +65,10 @@ def check_password(account_id, password, ip=None,
                 {"_id": account_id}
             )["gjp2" if is_gjp2 else "password"].encode()
         ):
-            ic()
             if is_check_valid and fast_mode:
                 rd.set(f"{REDIS_PREFIX}:{account_id}:passwd", ip, PASSWORD_TIMELINE)
             return True
         else:
-            ic()
             return False
     except TypeError:
-        ic()
         return False

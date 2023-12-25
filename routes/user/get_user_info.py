@@ -35,10 +35,11 @@ def get_user_info():
     for i in account_stat_info:
         response = {
             1: i["username"], 2: target_account_id, 13: i["secret_coins"], 17: i["user_coins"], 10: i["first_color"],
-            11: i["second_color"], 3: i["stars"], 46: i["diamonds"], 4: i["demons"], 8: i["creator_points"],
-            18: i["message_state"], 19: i["friends_state"], 50: i["comment_history_state"], 20: i["youtube"],
-            21: i["icon_cube"], 22: i["icon_ship"], 23: i["icon_ball"], 24: i["icon_ufo"], 25: i["icon_wave"],
-            26: i["icon_robot"], 28: i["icon_glow"], 43: i["icon_spider"], 48: 0, 30: i["global_rank"],
+            11: i["second_color"], 51: i["third_color"], 3: i["stars"], 52: i["moons"], 46: i["diamonds"],
+            4: i["demons"], 8: i["creator_points"], 18: i["message_state"], 19: i["friends_state"],
+            50: i["comment_history_state"], 20: i["youtube"], 21: i["icon_cube"], 22: i["icon_ship"],
+            23: i["icon_ball"], 24: i["icon_ufo"], 25: i["icon_wave"], 26: i["icon_robot"], 28: i["icon_glow"],
+            43: i["icon_spider"], 48: 0, 53: i["icon_swing_copter"], 54: i["icon_jetpack"], 30: i["global_rank"],
             16: target_account_id
         }
 

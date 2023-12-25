@@ -66,9 +66,10 @@ def activate_account():
 
             sample_account_stat = {
                 "_id": account_id, "username": db.account.find_one({"_id": account_id})["username"],
-                "stars": 0, "demons": 0, "diamonds": 0, "user_coins": 0, "secret_coins": 0, "creator_points": 0,
-                "first_color": 0, "second_color": 3, "icon_id": 1, "icon_type": 0, "icon_cube": 1, "icon_ship": 1,
-                "icon_ball": 1, "icon_ufo": 1, "icon_wave": 1, "icon_robot": 1, "icon_spider": 1, "icon_glow": 0,
+                "stars": 0, "moons": 0, "demons": 0, "diamonds": 0, "user_coins": 0, "secret_coins": 0,
+                "creator_points": 0, "first_color": 0, "second_color": 3, "third_color": 0, "icon_id": 1,
+                "icon_type": 0, "icon_cube": 1, "icon_ship": 1, "icon_ball": 1, "icon_ufo": 1, "icon_wave": 1,
+                "icon_robot": 1, "icon_spider": 1, "icon_glow": 0, "icon_swing_copter": 1, "icon_jetpack": 1,
                 "missed_messages": 0, "friend_requests": 0, "message_state": 0, "friends_state": 0,
                 "comment_history_state": 0, "youtube": "", "twitter": "", "twitch": "", "global_rank": 0,
                 "is_top_banned": 0, "prefix": "", "comment_color": "", "mod_level": 0, "vip_status": 0
