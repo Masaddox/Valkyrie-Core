@@ -70,6 +70,12 @@ def upload_level():
 
     gd_version = check_version()
 
+    if gd_version >= 22:
+        friend_only = 1 if unlisted == 1 else 0
+        unlisted = 1 if unlisted >= 1 else 0
+    else:
+        friend_only = 0
+
     if getsizeof(level_string) > MAXIMUM_LEVEL_SIZE:
         return "-1"
 
@@ -118,9 +124,9 @@ def upload_level():
             "coins": coins, "is_silver_coins": 0, "difficulty": 0, "stars": 0, "featured": 0, "epic": 0,
             "legendary": 0, "mythic": 0, "auto": 0, "demon": 0, "demon_type": 0, "song_id": song_id,
             "is_official_song": is_official_song, "original_id": original, "two_player": two_player,
-            "unlisted": unlisted, "ldm": ldm, "upload_time": int(time()), "update_time": 0, "rate_time": 0,
-            "is_deleted": 0, "delete_prohibition": 0, "update_prohibition": 0, "song_ids": song_ids, "sfx_ids": sfx_ids,
-            "game_version": gd_version, "ts": ts
+            "unlisted": unlisted, "friend_only": friend_only, "ldm": ldm, "upload_time": int(time()), "update_time": 0,
+            "rate_time": 0, "is_deleted": 0, "delete_prohibition": 0, "update_prohibition": 0, "song_ids": song_ids,
+            "sfx_ids": sfx_ids, "game_version": gd_version, "ts": ts
         }
 
         db.level.insert_one(sample_level)

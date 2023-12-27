@@ -31,6 +31,8 @@ PATH_TO_ROOT = getcwd()
 PATH_TO_SONG = DOMAIN + "/song"
 PATH_TO_DATABASE = "/database/db"
 
+COMMAND_PREFIX = "!"
+
 # == ==
 
 # == Secret settings ==

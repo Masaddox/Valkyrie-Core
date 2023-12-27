@@ -1,11 +1,11 @@
 from . import comment
 from time import time
-from config import PATH_TO_DATABASE
+from config import PATH_TO_DATABASE, COMMAND_PREFIX
 
 from utils import database as db
 
 from utils.last_id import last_id
-from utils.commands import mod_commands
+from utils.commands import commands
 from utils.passwd import check_password
 from utils.request_get import request_get
 from utils.check_secret import check_secret
@@ -57,8 +57,8 @@ def upload_comment():
     }) == 0:
         return "-1"
 
-    if level_comment_decode[0] == "!":  # Команда
-        mod_commands(account_id, level_id, level_comment_decode)
+    if level_comment_decode[0] == COMMAND_PREFIX:  # Команда
+        commands(account_id, level_id, level_comment_decode)
         return "-1"
 
     sample_comment = {
