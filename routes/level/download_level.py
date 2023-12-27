@@ -17,28 +17,19 @@ from utils.base64_dec_and_enc import base64_encode
 from utils.level_hashing import return_hash, return_hash2
 
 
-def update_download_counter(level_id, account_id, password, ip):
+def update_download_counter(level_id, account_id, ip):
     is_first_download = False
 
-    if account_id > 0:
-        if check_password(account_id, password):
-            if db.action_download.count_documents({
-                "level_id": level_id, "account_id": account_id
-            }) == 0:
-                is_first_download = True
-
-    # else:
-    #     if db.action_download.count_documents({
-    #         "level_id": level_id, "ip": ip
-    #     }) == 0:
-    #         account_id = 0
-    #         is_first_download = True
+    if db.action_download.count_documents({
+        "level_id": level_id, "account_id": account_id
+    }) == 0:
+        is_first_download = True
 
     if is_first_download:
         db.action_download.insert_one({
             "level_id": level_id,
             "account_id": account_id,
-            #  "ip": ip,
+            "ip": ip,
             "timestamp": int(time())
         })
         db.level.update_one({"_id": level_id}, {"$inc": {"downloads": 1}})
@@ -91,6 +82,11 @@ def download_level():
         else:
             dd = 0
 
+        if i["legendary"] == 1:
+            i["epic"] = 2
+        if i["mythic"] == 1:
+            i["epic"] = 3
+
         demon = "" if i["demon"] == 0 else 1
         auto = "" if i["auto"] == 0 else 1
         ldm = "" if i["ldm"] == 0 else 1
@@ -123,9 +119,19 @@ def download_level():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
-    th = Thread(name="update_download_counter",
-                target=update_download_counter,
-                args=(level_id, account_id, password, get_ip()))
-    th.start()
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if check_password(
+        account_id, password,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        th = Thread(name="update_download_counter",
+                    target=update_download_counter,
+                    args=(level_id, account_id, get_ip(),))
+        th.start()
 
     return response + user_info

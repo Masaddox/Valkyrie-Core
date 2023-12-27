@@ -9,6 +9,7 @@ from utils.passwd import check_password
 from utils.request_get import request_get
 from utils.check_secret import check_secret
 from utils.level_hashing import return_hash
+from utils.check_version import check_version
 from utils.response_processing import resp_proc
 from utils.difficulty_converter import demon_conv
 
@@ -35,6 +36,26 @@ def get_level():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
+    is_gjp2 = False
+    confirmed_account = False
+
+    gd_version = check_version()
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if not check_password(
+        account_id, password,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        if gd_version >= 22:
+            return "-1"
+
+        confirmed_account = False
+    else:
+        confirmed_account = True
+
     gauntlet = request_get("gauntlet", "int")
     gauntlet_bool = "" if gauntlet <= 0 else "1"
 
@@ -48,6 +69,9 @@ def get_level():
     no_star = request_get("noStar")
     featured = request_get("featured")
     epic = request_get("epic")
+    legendary = request_get("legendary")
+    mythic = request_get("mythic")
+
     original = request_get("original")
     two_player = request_get("twoPlayer")
     silver_coins = request_get("coins")
@@ -82,8 +106,14 @@ def get_level():
         if bool_chk(featured):
             query["featured"] = 1
             query["epic"] = 0
-        if bool_chk(epic):  # ENCROACHING DARK
+            query["legendary"] = 0
+            query["mythic"] = 0
+        if bool_chk(epic):
             query["epic"] = 1
+        if bool_chk(legendary):
+            query["legendary"] = 1
+        if bool_chk(mythic):  # MASADDOX ON TRACK filter
+            query["mythic"] = 1
         if bool_chk(original):
             query["original_id"] = 0
         if bool_chk(two_player):
@@ -129,65 +159,82 @@ def get_level():
                 long = long.split(",")
                 query["length"] = {"$in": list(map(int_conv, long))}
 
-        if type_pack == "0":  # Поиск
-            if int_conv(search) > 0:
-                query = {"_id": int_conv(search), "is_deleted": 0}  # "$or": []
-            elif search != "":
-                query["name"] = {"$regex": f"^{search}$", '$options': 'i'}
+        match int(type_pack):
+            case 0:  # Поиск
+                if int_conv(search) > 0:
+                    query = {"_id": int_conv(search), "is_deleted": 0}  # "$or": []
+                elif search != "":
+                    query["name"] = {"$regex": f"^{search}$", '$options': 'i'}
 
-        elif type_pack == "1":  # Больше всего загрузок
-            sort = [("downloads", DESCENDING)]
+            case 1:  # Больше всего загрузок
+                sort = [("downloads", DESCENDING)]
 
-        elif type_pack == "3":  # Тренды
-            last_week = time() - (7 * 24 * 60 * 60)
-            query["upload_time"] = {"$gt": last_week}
+            case 3:  # Тренды
+                last_week = time() - (7 * 24 * 60 * 60)
+                query["upload_time"] = {"$gt": last_week}
 
-        elif type_pack == "4":  # Новые уровни
-            sort = [("_id", DESCENDING)]
+            case 4:  # Новые уровни
+                sort = [("_id", DESCENDING)]
 
-        elif type_pack == "5":  # Уровни игрока
-            if int_conv(search) == account_id:
-                if check_password(account_id, password):
+            case 5:  # Уровни игрока
+                if int_conv(search) == account_id and confirmed_account:
                     query.pop("unlisted")
-            sort = [("_id", DESCENDING)]
-            query["account_id"] = int_conv(search)
 
-        elif type_pack == "6":  # Вкладка Featured
-            sort = [("rate_time", DESCENDING)]
-            query["featured"] = 1
+                sort = [("_id", DESCENDING)]
+                query["account_id"] = int_conv(search)
 
-        elif type_pack == "7":  # Вкладка Magic
-            last_week = time() - (7 * 24 * 60 * 60)
-            query["upload_time"] = {"$gt": last_week}
-            query["objects"] = {"$gt": 9999}
+            case 6:  # Вкладка Featured
+                sort = [("rate_time", DESCENDING)]
+                query["featured"] = 1
 
-        elif type_pack == "10":  # Вкладка Map packs
-            level_ids = search.split(",")
-            query = {
-                "_id": {"$in": list(map(int_conv, level_ids))},
-                "is_deleted": 0
-            }
+            case 7:  # Вкладка Magic
+                last_week = time() - (7 * 24 * 60 * 60)
+                query["upload_time"] = {"$gt": last_week}
+                query["objects"] = {"$gt": 9999}
 
-        elif type_pack == "11":  # Вкладка Awarded (недавно оценённые)
-            sort = [("rate_time", DESCENDING)]
-            query["stars"] = {"$gt": 0}
+            case 10:  # Вкладка Map packs
+                level_ids = search.split(",")
+                query = {
+                    "_id": {"$in": list(map(int_conv, level_ids))},
+                    "is_deleted": 0
+                }
 
-        elif type_pack == "12":  # Вкладка Followed
-            sort = [("_id", DESCENDING)]
-            account_ids = followed.split(",")
-            query["account_id"] = {"$in": list(map(int_conv, account_ids))}
+            case 11:  # Вкладка Awarded (недавно оценённые)
+                sort = [("rate_time", DESCENDING)]
+                query["stars"] = {"$gt": 0}
 
-        elif type_pack == "13":  # Вкладка Friends
-            friends = list(db.friend_list.find({"_id": account_id}))
-            if bool(friends):
-                friends = friends[0]["friend_list"]
-                query["account_id"] = {"$in": friends}
-            else:
-                query["account_id"] = 0
+            case 12:  # Вкладка Followed
+                sort = [("_id", DESCENDING)]
+                account_ids = followed.split(",")
+                query["account_id"] = {"$in": list(map(int_conv, account_ids))}
 
-        elif type_pack == "16":  # Вкладка Hall of fame
-            sort = [("rate_time", DESCENDING)]
-            query["epic"] = 1
+            case 13:  # Вкладка Friends
+                if confirmed_account:
+                    friends = list(db.friend_list.find({"_id": account_id}))
+                    if bool(friends):
+                        friends = friends[0]["friend_list"]
+                        query["account_id"] = {"$in": friends}
+                    else:
+                        query["account_id"] = 0
+
+            case 16:  # Вкладка Hall of fame
+                sort = [("rate_time", DESCENDING)]
+                query["epic"] = 1
+
+            case 21:  # Хранилище Daily
+                pass
+
+            case 22:  # Хранилище Weekly
+                pass
+
+            case 23:  # Хранилище событий
+                pass
+
+            case 25:  # Лист уровней
+                pass
+
+            case 27:  # Отправленные уровни
+                pass
 
     offset = page * 10
 
@@ -208,6 +255,11 @@ def get_level():
         else:
             dd = 0
 
+        if lvl["legendary"] == 1:
+            lvl["epic"] = 2
+        if lvl["mythic"] == 1:
+            lvl["epic"] = 3
+
         demon = "" if lvl["demon"] == 0 else 1
         auto = "" if lvl["auto"] == 0 else 1
 
@@ -216,7 +268,7 @@ def get_level():
 
         single_response = {
             1: lvl["_id"], 2: lvl["name"], 5: lvl["version"], 6: lvl["account_id"],
-            8: dd, 9: diff, 10: lvl["downloads"], 12: official_song_id, 13: 21,
+            8: dd, 9: diff, 10: lvl["downloads"], 12: official_song_id, 13: gd_version,
             14: lvl["likes"], 17: demon, 43: demon_conv(lvl["demon_type"]), 25: auto,
             18: lvl["stars"], 19: lvl["featured"], 42: lvl["epic"], 45: lvl["objects"], 3: lvl["desc"],
             15: lvl["length"], 30: lvl["original_id"], 31: lvl["two_player"], 37: lvl["coins"],

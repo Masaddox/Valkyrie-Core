@@ -37,10 +37,17 @@ def delete_level():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
     level_id = request_get("levelID", "int")
 
     if not check_password(
-        account_id, password
+        account_id, password,
+        fast_mode=False, is_gjp=not is_gjp2, is_gjp2=is_gjp2
     ):
         return "-1"
 

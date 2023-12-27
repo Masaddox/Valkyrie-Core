@@ -60,12 +60,19 @@ def get_scores():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
-    score_type = request_get("type")
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
 
     if not check_password(
-        account_id, password
+            account_id, password,
+            is_gjp=not is_gjp2, is_gjp2=is_gjp2
     ):
         return "1"
+
+    score_type = request_get("type")
 
     if score_type == "" or score_type == "relative":
         score_type = "top"

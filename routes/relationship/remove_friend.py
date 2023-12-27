@@ -18,12 +18,19 @@ def remove_friend():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
-    target_id = request_get("targetAccountID", "int")
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
 
     if not check_password(
-        account_id, password
+            account_id, password,
+            is_gjp=not is_gjp2, is_gjp2=is_gjp2
     ):
         return "-1"
+
+    target_id = request_get("targetAccountID", "int")
 
     if db.friend_list.count_documents({
         "_id": account_id, "friend_list": {"$in": (target_id,)}

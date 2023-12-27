@@ -20,6 +20,12 @@ def sync_account():
     username = char_clean(request_get("userName"))
     password = request_get("password")
 
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
     try:
         account_id = db.account_stat.find_one(
             {"username": {"$regex": f"^{username}$", '$options': 'i'}})["_id"]
@@ -29,7 +35,8 @@ def sync_account():
         return "-1"
 
     if not check_password(
-        account_id, password, is_gjp=False, fast_mode=False
+        account_id, password, fast_mode=False,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
     ):
         return "-1"
 

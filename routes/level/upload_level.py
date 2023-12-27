@@ -116,10 +116,11 @@ def upload_level():
             "name": level_name, "desc": level_desc, "likes": 0, "downloads": 0, "version": 1, "length": level_length,
             "objects": objects, "password": level_password, "extra_string": extra_string,
             "coins": coins, "is_silver_coins": 0, "difficulty": 0, "stars": 0, "featured": 0, "epic": 0,
-            "auto": 0, "demon": 0, "demon_type": 0, "song_id": song_id, "is_official_song": is_official_song,
-            "original_id": original, "two_player": two_player, "unlisted": unlisted, "ldm": ldm,
-            "upload_time": int(time()), "update_time": 0, "rate_time": 0, "is_deleted": 0, "delete_prohibition": 0,
-            "update_prohibition": 0, "song_ids": song_ids, "sfx_ids": sfx_ids, "game_version": gd_version, "ts": ts
+            "legendary": 0, "mythic": 0, "auto": 0, "demon": 0, "demon_type": 0, "song_id": song_id,
+            "is_official_song": is_official_song, "original_id": original, "two_player": two_player,
+            "unlisted": unlisted, "ldm": ldm, "upload_time": int(time()), "update_time": 0, "rate_time": 0,
+            "is_deleted": 0, "delete_prohibition": 0, "update_prohibition": 0, "song_ids": song_ids, "sfx_ids": sfx_ids,
+            "game_version": gd_version, "ts": ts
         }
 
         db.level.insert_one(sample_level)

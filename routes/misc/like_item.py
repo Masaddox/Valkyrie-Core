@@ -18,15 +18,22 @@ def like_item():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if not check_password(
+        account_id, password,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        return "1"
+
     item_id = request_get("itemID", "int")
     item_type = request_get("type", "int")
 
     like = 1 if request_get("like", "int") != 0 else -1
-
-    if not check_password(
-        account_id, password
-    ):
-        return "1"
 
     if db.action_like.count_documents({
         "item_id": item_id,
@@ -35,14 +42,17 @@ def like_item():
     }) == 1:
         return "1"
 
-    if item_type == 1:  # Уровень
-        coll = db.level
-    elif item_type == 2:  # Комментарий к уровню
-        coll = db.level_comment
-    elif item_type == 3:  # Комментарий на аккаунте
-        coll = db.account_comment
-    else:
-        return "1"
+    match item_type:
+        case 1:  # Уровень
+            coll = db.level
+        case 2:  # Комментарий к уровню
+            coll = db.level_comment
+        case 3:  # Комментарий на аккаунте
+            coll = db.account_comment
+        case 4:  # Лит уровней
+            coll = db.level_list
+        case _:
+            return "1"
 
     if coll.count_documents({
         "_id": item_id

@@ -23,16 +23,23 @@ def upload_comment():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if not check_password(
+            account_id, password,
+            is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        return "-1"
+
     level_comment = request_get("comment")
     level_id = request_get("levelID", "int")
     percent = request_get("percent", "int")
 
     level_comment_decode = base64_decode(level_comment)
-
-    if not check_password(
-        account_id, password
-    ):
-        return "-1"
 
     if not request_limiter(
         db.level_comment, {"account_id": account_id}, limit_time=15
