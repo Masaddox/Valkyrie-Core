@@ -1,4 +1,5 @@
 import hashlib
+from icecream import ic
 from config import REDIS_PREFIX
 from bcrypt import hashpw, gensalt, checkpw
 

@@ -73,6 +73,7 @@ def download_level():
 
         featured_id = featured_id if type_daily == 0 else featured_id + 100001
         is_featured = True
+
     elif level_id == 0:
         return "-1"
 
@@ -101,13 +102,13 @@ def download_level():
             level_string = f.read()
 
         single_response = {
-            1: i["_id"], 2: i["name"], 3: i["desc"], 4: level_string, 5: i["version"],
-            6: i["account_id"], 8: dd, 9: difficulty, 10: i["downloads"], 12: official_song_id, 13: 21,
+            1: i["_id"], 2: i["name"], 3: i["desc"], 4: level_string, 5: i["version"], 6: i["account_id"],
+            8: dd, 9: difficulty, 10: i["downloads"], 12: official_song_id, 13: i["game_version"],
             14: i["likes"], 17: demon, 43: demon_conv(i["demon_type"]), 25: auto, 18: i["stars"],
             19: i["featured"], 42: i["epic"], 45: i["objects"], 15: i["length"], 30: i["original_id"],
             31: i["two_player"], 28: 0, 29: 0, 35: custom_song_id, 36: i["extra_string"], 37: i["coins"],
             38: i["is_silver_coins"], 39: 0, 46: 0, 47: 0, 40: ldm, 27: base64_encode(xor(str(
-                i["password"]), "26364"))
+                i["password"]), "26364")), 52: i["song_ids"], 53: i["sfx_ids"], 57: i["ts"]
         }
 
         if is_featured:

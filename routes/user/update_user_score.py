@@ -1,4 +1,5 @@
 from . import user
+from icecream import ic
 from config import PATH_TO_DATABASE
 
 from utils import database as db
@@ -74,6 +75,7 @@ def update_user_score():
     is_gjp2 = False
 
     if request_get("gjp2") != "":
+        is_gjp2 = True
         password = request_get("gjp2")
 
     if not check_password(

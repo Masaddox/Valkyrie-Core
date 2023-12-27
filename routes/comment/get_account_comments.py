@@ -1,4 +1,5 @@
 from . import comment
+from flask import request
 from pymongo import DESCENDING
 from config import PATH_TO_DATABASE
 
@@ -17,9 +18,14 @@ def get_account_comments():
     ):
         return "-1"
 
-    account_id = request_get("accountID", "int")
+    account_ids = request.values.getlist("accountID")  # accountID; targetAccoutnID
 
-    prefix = db.account_stat.find_one({"_id": account_id})["prefix"]
+    if len(account_ids) == 1:  # 2.1
+        account_ids = [0] + account_ids
+
+    account_ids = list(map(int, account_ids))
+
+    prefix = db.account_stat.find_one({"_id": account_ids[1]})["prefix"]
     prefix = prefix + " / " if prefix != "" else ""
 
     page = request_get("page", "int")
@@ -27,7 +33,7 @@ def get_account_comments():
     offset = page * 10
 
     query = {
-        "account_id": account_id
+        "account_id": account_ids[1]
     }
 
     response = ""
