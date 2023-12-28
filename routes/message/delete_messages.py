@@ -34,11 +34,11 @@ def delete_messages():
     message_ids = request_get("messages")
 
     if message_ids != "":
-        message_ids = message_ids.split(",")
+        message_ids = [int(i) for i in message_ids.split(",")]
     else:
         message_ids = None
 
-    query = {"_id": message_id} if message_ids is None else \
+    query = {"_id": message_id} if message_ids == "" else \
             {"_id": {"$in": message_ids}}
     messages = tuple(db.message.find(query))
 

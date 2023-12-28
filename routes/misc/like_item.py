@@ -1,11 +1,12 @@
 from . import misc
+from time import time
 from config import PATH_TO_DATABASE, PROTECTION_AGAINST_DISLIKE_BOTS
 
 from utils import database as db
 
 from utils.passwd import check_password
-from utils.request_get import request_get
 from utils.check_secret import check_secret
+from utils.request_get import request_get, get_ip
 
 
 @misc.route(f"{PATH_TO_DATABASE}/likeGJItem211.php", methods=("POST", "GET"))
@@ -75,6 +76,8 @@ def like_item():
         "item_id": item_id,
         "item_type": item_type,
         "account_id": account_id,
+        "ip": get_ip(),
+        "timestamp": int(time())
     }
 
     db.action_like.insert_one(sample_action_like)

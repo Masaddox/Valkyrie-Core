@@ -130,7 +130,7 @@ def update_user_score():
         (1, icon_robot, LIMIT[i_ver]["icon_robot"]), (1, icon_spider, LIMIT[i_ver]["icon_spider"]),
         (1, icon_swing_copter, LIMIT[i_ver]["icon_swing_copter"]), (1, icon_jetpack, LIMIT[i_ver]["icon_jetpack"]),
         (0, icon_glow, LIMIT[i_ver]["icon_glow"]), (0, first_color, LIMIT[i_ver]["first_color"]),
-        (0, second_color, LIMIT[i_ver]["second_color"]), (0, third_color, LIMIT[i_ver]["third_color"])
+        (0, second_color, LIMIT[i_ver]["second_color"]), (-1, third_color, LIMIT[i_ver]["third_color"])
     ):
         return "-1"
 

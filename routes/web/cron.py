@@ -131,13 +131,13 @@ def cron(task, key):
 
         """ Если игрок лишился статуса модератора """
 
-        for user in db.account_stat.find({"mod_level": {"$gt": 0}}):
+        for user in db.account_stat.find({"mod_badge": {"$gt": 0}}):
             if db.role_assign.count_documents({"_id": user["_id"]}) == 0:
                 comment_color = user["comment_color"] if user["vip_status"] == 1 else ""
                 prefix = user["prefix"] if user["prefix"] not in ("Moderator", "Elder Moderator") else ""
 
                 db.account_stat.update_one({"_id": user["_id"]}, {"$set": {
-                    "mod_level": 0,
+                    "mod_badge": 0,
                     "prefix": prefix,
                     "comment_color": comment_color
                 }})

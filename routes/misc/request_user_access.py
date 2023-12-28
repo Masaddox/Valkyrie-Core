@@ -38,10 +38,10 @@ def request_user_access():
     role_id = db.role_assign.find_one({"_id": account_id})["role_id"]
     role = db.role.find({"_id": role_id})
 
-    badge = 2 if role[0]["mod_level"] > 1 else 1
+    badge = role["mod_badge"]
 
     db.account_stat.update_one({"_id": account_id}, {"$set": {
-        "mod_level": badge,
+        "mod_badge": badge,
         "comment_color": role[0]["comment_color"]
     }})
 

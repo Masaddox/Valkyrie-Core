@@ -70,7 +70,7 @@ def get_user_info():
 
     response.update({
         44: account_stat_info[0]["twitter"], 45: account_stat_info[0]["twitch"],
-        49: account_stat_info[0]["mod_level"]
+        49: account_stat_info[0]["mod_badge"]
     })
 
     if is_account_owner and account_id == target_account_id:

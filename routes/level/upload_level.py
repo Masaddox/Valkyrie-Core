@@ -82,7 +82,7 @@ def upload_level():
     if len(level_name) == 0 or len(level_string) == 0:
         return "-1"
 
-    level_password = 1 if 1 <= level_password <= 7 else 0  # open or close
+    #level_password = 1 if 1 <= level_password <= 7 else 0  # open or close
 
     if not limit_check(
         (level_length, 5 if gd_version >= 22 else 4), (len(base64_decode(level_desc)), 140), (two_player, 1),

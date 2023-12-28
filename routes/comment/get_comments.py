@@ -45,9 +45,9 @@ def get_comments():
         glow = 2 if glow == 1 else glow
 
         single_comment_response = {
-            2: base64_decode(i["comment"]), 3: account_id, 4: i["likes"],
+            2: base64_decode(i["comment"]), 3: account_id, 4: i["likes"], 5: 0,
             7: 0, 10: i["percent"], 9: prefix + time_conv(i["upload_time"]),
-            6: i["_id"], 11: user_info[0]["mod_level"]
+            6: i["_id"], 11: user_info[0]["mod_badge"]
         }
 
         if user_info[0]["comment_color"] != "":

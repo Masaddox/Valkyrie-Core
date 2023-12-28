@@ -234,7 +234,7 @@ def get_level():
                 pass
 
             case 27:  # Отправленные уровни
-                pass
+                query["_id"] = {"$in": [i["level_id"] for i in db.suggest.find()]}
 
     offset = page * 10
 

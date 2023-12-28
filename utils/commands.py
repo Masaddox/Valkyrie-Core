@@ -9,15 +9,14 @@ from utils.regex import char_clean
 
 
 def commands(account_id, level_id, command):
-    role_assign_tuple = tuple(db.role_assign.find({"_id": account_id}))
-
+    role_assign = tuple(db.role_assign.find({"_id": account_id}))
     is_mod = False
 
-    if len(role_assign_tuple) == 0:
+    if len(role_assign) == 0:
         return False  # Заглушка
     else:
         is_mod = True
-        role_assign = role_assign_tuple[0]
+        role = db.role.find({"_id": role_assign[0]["role_id"]})[0]
 
     command = command[len(COMMAND_PREFIX):]
     command_split = command.split(" ")
@@ -26,8 +25,7 @@ def commands(account_id, level_id, command):
 
     match command_split[0]:
         case "veritycoins":
-            if is_mod and role_assign["command_access"]["veritycoins"]:
-
+            if is_mod and role["command_access"]["veritycoins"]:
                 try:
                     vercoins = int(command_split[1])
                 except IndexError:
@@ -38,18 +36,18 @@ def commands(account_id, level_id, command):
                 }
 
         case "unveritycoins":
-            if is_mod and role_assign["command_access"]["veritycoins"]:
+            if is_mod and role["command_access"]["veritycoins"]:
                 query_level = {
                     "is_silver_coins": 0
                 }
 
         case "delete":
-            if is_mod and role_assign["command_access"]["delete"]:
+            if is_mod and role["command_access"]["delete"]:
                 db.level.update_one({"_id": level_id}, {"$set": {"is_deleted": 1}})
                 return True
 
         case "fulldelete":
-            if is_mod and role_assign["command_access"]["delete"]:
+            if is_mod and role["command_access"]["delete"]:
                 db.level.update_one({"_id": level_id}, {"$set": {"is_deleted": 1}})
 
                 os.remove(join(
@@ -60,7 +58,7 @@ def commands(account_id, level_id, command):
                 return True
 
         case "rate":
-            if is_mod and role_assign["command_access"]["rate"]:
+            if is_mod and role["command_access"]["rate"]:
                 diff = 0
 
                 match len(command_split):
@@ -74,17 +72,18 @@ def commands(account_id, level_id, command):
                             "difficulty": diff if 0 <= diff <= 10 else 0
                         }
                     case 3:
+                        diff = int(command_split[1])
                         stars = int(command_split[2])
                         query_level = {
                             "difficulty": diff if 0 <= diff <= 10 else 0,
                             "stars": stars if 0 <= stars <= 10 else 0,
-                            "rate_time": int(time())
+                            "rate_time": int(time()) if stars > 0 else 0
                         }
                     case _:
                         return False
 
         case "unrate":
-            if is_mod and role_assign["command_access"]["rate"]:
+            if is_mod and role["command_access"]["rate"]:
                 query_level = {
                     "difficulty": 0,
                     "stars": 0,
@@ -100,7 +99,7 @@ def commands(account_id, level_id, command):
                 }
 
         case "stars":
-            if is_mod and role_assign["command_access"]["stars"]:
+            if is_mod and role["command_access"]["stars"]:
 
                 try:
                     stars = int(command_split[1])
@@ -111,14 +110,18 @@ def commands(account_id, level_id, command):
                     "stars": stars if 0 <= stars <= 10 else 0
                 }
 
+                if stars == 0:
+                    query_level["rate_time"] = 0
+
         case "unstars":
-            if is_mod and role_assign["command_access"]["stars"]:
+            if is_mod and role["command_access"]["stars"]:
                 query_level = {
-                    "stars": 0
+                    "stars": 0,
+                    "rate_time": 0
                 }
 
         case "featured":
-            if is_mod and role_assign["command_access"]["featured"]:
+            if is_mod and role["command_access"]["featured"]:
 
                 try:
                     feat = int(command_split[1])
@@ -130,13 +133,13 @@ def commands(account_id, level_id, command):
                 }
 
         case "unfeatured":
-            if is_mod and role_assign["command_access"]["featured"]:
+            if is_mod and role["command_access"]["featured"]:
                 query_level = {
                     "featured": 0
                 }
 
         case "epic":
-            if is_mod and role_assign["command_access"]["epic"]:
+            if is_mod and role["command_access"]["epic"]:
 
                 try:
                     epic = int(command_split[1])
@@ -149,13 +152,13 @@ def commands(account_id, level_id, command):
                 }
 
         case "unepic":
-            if is_mod and role_assign["command_access"]["epic"]:
+            if is_mod and role["command_access"]["epic"]:
                 query_level = {
                     "epic": 0
                 }
 
         case "legendary":
-            if is_mod and role_assign["command_access"]["legendary"]:
+            if is_mod and role["command_access"]["legendary"]:
 
                 try:
                     legend = int(command_split[1])
@@ -169,13 +172,13 @@ def commands(account_id, level_id, command):
                 }
 
         case "unlegendary":
-            if is_mod and role_assign["command_access"]["legendary"]:
+            if is_mod and role["command_access"]["legendary"]:
                 query_level = {
                     "legendary": 0
                 }
 
         case "mythic":
-            if is_mod and role_assign["command_access"]["mythic"]:
+            if is_mod and role["command_access"]["mythic"]:
 
                 try:
                     mythic = int(command_split[1])
@@ -190,28 +193,36 @@ def commands(account_id, level_id, command):
                 }
 
         case "unmythic":
-            if is_mod and role_assign["command_access"]["mythic"]:
+            if is_mod and role["command_access"]["mythic"]:
                 query_level = {
                     "mythic": 0
                 }
 
         case "demon":
-            if is_mod and role_assign["command_access"]["demon"]:
+            if is_mod and role["command_access"]["demon"]:
                 if len(command_split) == 2:
                     demon = int(command_split[1])
+
                 else:
                     demon = 3
 
-                query_level = {
-                    "demon": 1,
-                    "stars": 10,
-                    "difficulty": 5,
-                    "demon_type": demon,
-                    "rate_time": int(time())
-                }
+                if demon == 0:  # undemon
+                    query_level = {
+                        "demon": 0,
+                        "stars": 9,
+                        "demon_type": 0
+                    }
+                else:
+                    query_level = {
+                        "demon": 1,
+                        "stars": 10,
+                        "difficulty": 5,
+                        "demon_type": demon,
+                        "rate_time": int(time())
+                    }
 
         case "undemon":
-            if is_mod and role_assign["command_access"]["demon"]:
+            if is_mod and role["command_access"]["demon"]:
                 query_level = {
                     "demon": 0,
                     "stars": 9,
@@ -222,7 +233,7 @@ def commands(account_id, level_id, command):
             if len(command_split) != 3:
                 return False
 
-            if is_mod and role_assign["command_access"]["song"]:
+            if is_mod and role["command_access"]["song"]:
 
                 match command_split[1]:
                     case "c":
@@ -249,7 +260,7 @@ def commands(account_id, level_id, command):
                 })
 
         case "pass":
-            if is_mod and role_assign["command_access"]["pass"]:
+            if is_mod and role["command_access"]["pass"]:
                 password = 0
 
                 if len(command_split) == 2:
@@ -258,12 +269,18 @@ def commands(account_id, level_id, command):
                     except ValueError:
                         password = 0 if command_split[1] == "close" else 1 if command_split[1] == "open" else 0
 
+                if len(str(password)) == 1:
+                    password = 0 if password == 0 else 1
+                elif len(str(password)) >= 2:
+                    number_zero = 6 - len(str(password))
+                    password = int("1" + f"{"0" * number_zero}" + str(password))
+
                 query_level = {
-                    "password": password if len(str(password)) == 1 else int("1" + str(password))
+                    "password": password
                 }
 
         case "rename":
-            if is_mod and db.level.count_documents({"_id": level_id, "account_id": account_id}) == 0:
+            if is_mod and role["command_access"]["rename"]:
                 if len(command_split) == 1:
                     return False
 
@@ -281,7 +298,7 @@ def commands(account_id, level_id, command):
             if len(command_split) == 1:
                 return False
 
-            if is_mod and role_assign["command_access"]["setacc"]:
+            if is_mod and role["command_access"]["setacc"]:
                 try:
                     user_info = db.account_stat.find({
                         "username": {"$regex": f"^{char_clean(command_split[1])}$", '$options': 'i'}
@@ -298,7 +315,7 @@ def commands(account_id, level_id, command):
             if len(command_split) == 1:
                 return False
 
-            if is_mod and role_assign["command_access"]["unlisted"]:
+            if is_mod and role["command_access"]["unlisted"]:
                 unlisted = 0
                 friend_only = 0
 
@@ -313,6 +330,27 @@ def commands(account_id, level_id, command):
                 query_level = {
                     "unlisted": unlisted,
                     "friend_only": friend_only
+                }
+
+        case "auto":
+            if is_mod and role["command_access"]["auto"]:
+
+                try:
+                    auto = int(command_split[1])
+                except IndexError:
+                    auto = 1
+
+                query_level = {
+                    "auto": auto,
+                    "difficulty": auto
+                }
+
+        case "unauto":
+            if is_mod and role["command_access"]["auto"]:
+
+                query_level = {
+                    "auto": 0,
+                    "difficulty": 0
                 }
 
         case "daily":

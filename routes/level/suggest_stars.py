@@ -11,6 +11,15 @@ from utils.check_secret import check_secret
 from utils.difficulty_converter import diff_conv
 
 
+FEATURED_CONV = {
+    0: {"featured": 0, "epic": 0, "legendary": 0, "mythic": 0},
+    1: {"featured": 1, "epic": 0, "legendary": 0, "mythic": 0},
+    2: {"featured": 1, "epic": 1, "legendary": 0, "mythic": 0},
+    3: {"featured": 1, "epic": 0, "legendary": 1, "mythic": 0},
+    4: {"featured": 1, "epic": 0, "legendary": 0, "mythic": 1},
+}
+
+
 @level.route(f"{PATH_TO_DATABASE}/suggestGJStars.php", methods=("POST", "GET"))
 @level.route(f"{PATH_TO_DATABASE}/suggestGJStars20.php", methods=("POST", "GET"))
 def suggest_stars():
@@ -22,15 +31,21 @@ def suggest_stars():
     account_id = request_get("accountID", "int")
     password = request_get("gjp")
 
+    is_gjp2 = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if not check_password(
+        account_id, password, is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        abort(500)
+
     level_id = request_get("levelID", "int")
 
     stars = request_get("stars", "int")
     featured = request_get("feature", "int")
-
-    if not check_password(
-        account_id, password
-    ):
-        abort(500)
 
     if db.role_assign.count_documents({
         "_id": account_id
@@ -43,53 +58,50 @@ def suggest_stars():
         abort(500)
 
     role_id = db.role_assign.find_one({"_id": account_id})["role_id"]
-    mod_level = db.role.find_one({"_id": role_id})["mod_level"]
+    access = db.role.find_one({"_id": role_id})["command_access"]["suggest_stars"]
 
-    query_level = {"rate_time": int(time()), "delete_prohibition": 1}
+    query_level = {"rate_time": int(time())} | FEATURED_CONV[featured]
 
-    if mod_level == 1:
-
-        db.suggest.insert_one({
-            "account_id": account_id,
-            "level_id": level_id,
-            "stars": stars,
-            "featured": featured,
-            "timestamp": int(time())
-        })
-
-        return "1"
-
-    elif mod_level >= 2:
-
-        query_level["featured"] = 1 if bool(featured) else 0
-
-        if stars == 1:  # Авто
-            query_level.update({
-                "auto": 1,
-                "stars": 1,
-                "demon": 0,
-                "demon_type": 0,
-                "difficulty": 1
-            })
-        elif 1 < stars < 10:
-            query_level.update({
-                "auto": 0,
+    match access:
+        case 1:
+            db.suggest.insert_one({
+                "account_id": account_id,
+                "username": db.account_stat.find_one({"_id": account_id})["username"],
+                "level_id": level_id,
                 "stars": stars,
-                "demon": 0,
-                "demon_type": 0,
-                "difficulty": diff_conv(stars)
-            })
-        elif stars == 10:
-            query_level.update({
-                "auto": 0,
-                "stars": 10,
-                "demon": 1,
-                "demon_type": 3,
-                "difficulty": 5
-            })
+                "timestamp": int(time())
+            } | FEATURED_CONV[featured])
 
-    else:
-        abort(500)
+            return "1"
+
+        case 2:
+            if stars == 1:  # Авто
+                query_level.update({
+                    "auto": 1,
+                    "stars": 1,
+                    "demon": 0,
+                    "demon_type": 0,
+                    "difficulty": 1
+                })
+            elif 1 < stars < 10:
+                query_level.update({
+                    "auto": 0,
+                    "stars": stars,
+                    "demon": 0,
+                    "demon_type": 0,
+                    "difficulty": diff_conv(stars)
+                })
+            elif stars == 10:
+                query_level.update({
+                    "auto": 0,
+                    "stars": 10,
+                    "demon": 1,
+                    "demon_type": 3,
+                    "difficulty": 5
+                })
+
+        case _:
+            abort(500)
 
     db.level.update_one({"_id": level_id}, {"$set": query_level})
 

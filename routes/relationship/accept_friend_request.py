@@ -25,8 +25,8 @@ def accept_friend_request():
         password = request_get("gjp2")
 
     if not check_password(
-            account_id, password,
-            is_gjp=not is_gjp2, is_gjp2=is_gjp2
+        account_id, password,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
     ):
         return "-1"
 
@@ -40,30 +40,21 @@ def accept_friend_request():
     }) == 0:
         return "-1"
 
+    for user in [account_id, sender_id]:
+        if db.friend_list.count_documents({"_id": user}) == 0:
+            db.friend_list.insert_one({
+                "_id": user, "friend_list": []
+            })
+
     if db.friend_list.count_documents({
-        "_id": account_id, "friend_list": {"$size": {"$gte": 100}}
+        "_id": account_id, "$expr": {"$gte": [{"$size": "$friend_list"}, 100]}
     }) == 1:
         return "-1"
 
     db.account_stat.update_one({"_id": account_id}, {"$inc": {
         "friend_requests": -1
     }})
-
-    if db.friend_list.count_documents({
-        "_id": account_id
-    }) == 0:
-        db.friend_list.insert_one({
-            "_id": account_id, "friend_list": []
-        })
-
     db.friend_list.update_one({"_id": account_id}, {"$push": {"friend_list": sender_id}})
-
-    if db.friend_list.count_documents({
-        "_id": sender_id
-    }) == 0:
-        db.friend_list.insert_one({
-            "_id": sender_id, "friend_list": []
-        })
 
     db.friend_list.update_one({"_id": sender_id}, {"$push": {"friend_list": account_id}})
 
