@@ -5,6 +5,7 @@ from .level_pack import *
 from .message import *
 from .misc import *
 from .relationship import *
+from .reward import *
 from .score import *
 from .user import *
 from .web import *

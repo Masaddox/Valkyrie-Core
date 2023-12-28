@@ -24,6 +24,8 @@ def cron(task, key):
         CP_RATE = 1
         CP_FEATURED = 2
         CP_EPIC = 4
+        CP_LEGENDARY = 6
+        CP_MYTHIC = 10
 
         """ Выдача creator points """
 

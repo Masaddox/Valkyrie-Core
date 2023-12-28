@@ -7,7 +7,7 @@ ___
 **Its main feature** is **good protection** and **simplicity/scalability of code**. 
 *Good protection* will help against people who want to break or clog your server, 
 and *lightweight and scalable code* allows you to change the core to your taste, without much effort. 
-**MongoDB** database is used for data storage, and for data caching *(which speeds up the speed very well)* uses **Memcached**.
+**MongoDB** database is used for data storage, and for data caching *(which speeds up the speed very well)* uses **RedisDB**.
 
 ### Описание [RUS]
 
@@ -15,7 +15,7 @@ and *lightweight and scalable code* allows you to change the core to your taste,
 помощи языка программирования Python. **Главная его фишка** - это **хорошая защита** и **простота/масштабируемость кода**.
 *Хорошая защита* поможет от людей, которые хотят сломать или засорить ваш сервер, а *легкость и масштабируемость кода*
 даёт возможность изменять ядро под свой вкус, без больших усилий. Для хранения данных используется база данных **MongoDB**, а для
-кеширования данных *(которая очень хорошо ускоряет ядро)* используется **Memcached**.
+кеширования данных *(которая очень хорошо ускоряет ядро)* используется **RedisDB**.
 
 ---
 

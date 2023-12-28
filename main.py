@@ -11,7 +11,7 @@ hcaptcha.init_hc(app)
 
 for route in (
     account, comment, level, level_pack, message,
-    misc, relationship, score, user, web
+    misc, relationship, reward, score, user, web
 ):
     app.register_blueprint(route)
 

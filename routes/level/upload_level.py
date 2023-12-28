@@ -18,8 +18,8 @@ from utils.request_limiter import request_limiter
 from utils.base64_dec_and_enc import base64_decode
 
 
-MAXIMUM_LEVEL_SIZE = 10 * 1024 * 1024  # 10 MB
-MINIMUM_NUMBER_BLOCKS = 0
+MAXIMUM_LEVEL_SIZE = 5 * 1024 * 1024  # 5 MB
+MINIMUM_NUMBER_BLOCKS = 50
 
 
 @level.route(f"{PATH_TO_DATABASE}/uploadGJLevel21.php", methods=("POST", "GET"))

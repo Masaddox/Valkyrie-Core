@@ -13,7 +13,7 @@ from utils.check_secret import check_secret
 
 
 MAX_SIZE = [  # no vip, vip
-    15 * 1024 * 1024,
+    20 * 1024 * 1024,
     50 * 1024 * 1024
 ]
 

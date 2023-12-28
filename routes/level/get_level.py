@@ -188,9 +188,10 @@ def get_level():
                 query["featured"] = 1
 
             case 7:  # Вкладка Magic
-                last_week = time() - (7 * 24 * 60 * 60)
+                last_week = time() - (30 * 24 * 60 * 60)
                 query["upload_time"] = {"$gt": last_week}
                 query["objects"] = {"$gt": 9999}
+                sort = [("_id", DESCENDING)]
 
             case 10:  # Вкладка Map packs
                 level_ids = search.split(",")
