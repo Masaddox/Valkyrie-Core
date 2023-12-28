@@ -24,7 +24,7 @@ MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB max
 GD_SERVER_NAME = "Geometry Dash Private Server"
 DISCORD_SERVER_LINK = "https://discord.com/"
 
-DOMAIN = ""  # https://example.com
+DOMAIN = "https://127.0.0.1:5000"  # https://example.com
 
 PATH_TO_API = "/api"
 PATH_TO_ROOT = getcwd()
