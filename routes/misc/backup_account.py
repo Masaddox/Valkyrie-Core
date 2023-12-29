@@ -48,7 +48,7 @@ def backup_account():
 
     if not check_password(
         account_id, password, fast_mode=False,
-        is_gjp=not is_gjp2, is_gjp2=is_gjp2
+        is_gjp=False, is_gjp2=is_gjp2
     ):
         return "-1"
 

@@ -51,6 +51,7 @@ def download_level():
 
     if level_id < 0:  # Daily and Weekly
         type_daily = 0 if level_id == -1 else 1  # 0 = daily, 1 = weekly
+        time_limit = 86400 if type_daily == 0 else 604800
 
         time_now = int(time())
 
@@ -58,6 +59,9 @@ def download_level():
             "timestamp": {"$lte": time_now},
             "type_daily": type_daily
         }).sort([("timestamp", DESCENDING)]).limit(1))
+
+        if (daily_level[0]['timestamp'] + time_limit) - time_now <= -1:
+            return "-1"
 
         level_id = daily_level[0]["level_id"]
         featured_id = daily_level[0]["daily_id"]

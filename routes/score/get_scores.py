@@ -74,10 +74,10 @@ def get_scores():
 
     score_type = request_get("type")
 
-    if score_type == "" or score_type == "relative":
+    if score_type == "" or score_type == "relative":  # Пока relative я не буду реализовывать
         score_type = "top"
 
-    if score_type != "friends":
+    if score_type != "friends" and score_type != "relative":
         cache = rd.get(f"{REDIS_PREFIX}:top:{score_type}")
         if cache is not None:
             return cache
@@ -87,22 +87,24 @@ def get_scores():
     limit = 100
     sort = [("stars", DESCENDING)]
 
-    if score_type == "top":
+    match score_type:
+        case "top":
+            query["stars"] = {"$gte": 10}
 
-        query["stars"] = {"$gte": 10}
+        case "creators":
+            query["creator_points"] = {"$gt": 0}
+            sort = [("creator_points", DESCENDING)]
 
-    elif score_type == "creators":
+        case "friends":
+            try:
+                friend_list = db.friend_list.find_one({"_id": account_id})["friend_list"]
+            except IndexError:
+                return "1"
 
-        query["creator_points"] = {"$gt": 0}
-        sort = [("creator_points", DESCENDING)]
+            query["_id"] = {"$in": friend_list + [account_id]}
 
-    elif score_type == "friends":
-
-        return "1"
-
-    else:
-
-        return "-1"
+        case "relative":
+            pass
 
     response = ""
 
@@ -117,14 +119,14 @@ def get_scores():
         single_response = {
             1: user["username"], 2: user["_id"], 13: user["secret_coins"], 17: user["user_coins"],
             6: counter, 9: user["icon_id"], 10: user["first_color"], 11: user["second_color"],
-            14: user["icon_type"], 15: glow, 16: user["_id"], 3: user["stars"], 8: user["creator_points"],
-            46: user["diamonds"], 4: user["demons"]
+            51: user["third_color"], 14: user["icon_type"], 15: glow, 16: user["_id"], 3: user["stars"],
+            8: user["creator_points"], 52: user["moons"], 46: user["diamonds"], 4: user["demons"]
         }
 
         counter += 1
         response += resp_proc(single_response) + "|"
 
-    if score_type != "friends":
+    if score_type != "friends" and score_type != "relative":
         rd.set(f"{REDIS_PREFIX}:top:{score_type}", response, SCORES_LIFETIME)
 
     return response

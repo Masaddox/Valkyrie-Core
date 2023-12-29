@@ -72,7 +72,7 @@ def activate_account():
                 "icon_robot": 1, "icon_spider": 1, "icon_glow": 0, "icon_swing_copter": 1, "icon_jetpack": 1,
                 "missed_messages": 0, "friend_requests": 0, "message_state": 0, "friends_state": 0,
                 "comment_history_state": 0, "youtube": "", "twitter": "", "twitch": "", "global_rank": 0,
-                "is_top_banned": 0, "prefix": "", "comment_color": "", "mod_badge": 0, "vip_status": 0,
+                "is_banned": 0, "is_top_banned": 0, "prefix": "", "comment_color": "", "mod_badge": 0, "vip_status": 0,
                 "small_chest_time": 0, "big_chest_time": 0, "small_chest_counter": 0, "big_chest_counter": 0
             }
 

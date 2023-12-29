@@ -1,10 +1,15 @@
 import os
 from time import time
 from os.path import join
+
+from icecream import ic
+from pymongo import DESCENDING
+from datetime import datetime, timedelta
 from config import PATH_TO_ROOT, COMMAND_PREFIX
 from routes.level.delete_level import removal_of_residues
 
 from utils import database as db
+from utils.last_id import last_id
 from utils.regex import char_clean
 
 
@@ -354,10 +359,63 @@ def commands(account_id, level_id, command):
                 }
 
         case "daily":
-            pass
+            if is_mod and role["command_access"]["daily"]:
+                time_limit = 86400
+
+                today = datetime.now().date()
+                midnight = datetime.combine(today, datetime.min.time()).timestamp()
+
+                time_now = int(time())
+
+                last_daily_level = list(db.daily_level.find(
+                    {"type_daily": 0}
+                ).sort("timestamp", DESCENDING).limit(1))
+
+                if len(last_daily_level) > 0:
+                    if last_daily_level[0]["timestamp"] + time_limit <= time_now:
+                        timestamp = midnight
+                    else:
+                        timestamp = last_daily_level[0]["timestamp"] + time_limit
+                else:
+                    timestamp = midnight
+
+                db.daily_level.insert_one({
+                    "daily_id": last_id(db.daily_level, "daily_id"),
+                    "type_daily": 0,
+                    "level_id": level_id,
+                    "timestamp": timestamp
+                })
 
         case "weekly":
-            pass
+            if is_mod and role["command_access"]["weekly"]:
+                time_limit = 604800
+
+                today = datetime.now()
+                days_since_monday = (today.weekday() - 0) % 7
+                midnight_today = datetime.combine(today.date(), datetime.min.time())
+                midnight_last_monday = midnight_today - timedelta(days=days_since_monday)
+                midnight_last_monday = int(midnight_last_monday.timestamp())
+
+                time_now = int(time())
+
+                last_daily_level = list(db.daily_level.find(
+                    {"type_daily": 1}
+                ).sort("timestamp", DESCENDING).limit(1))
+
+                if len(last_daily_level) > 0:
+                    if last_daily_level[0]["timestamp"] + time_limit * 2 <= time_now:
+                        timestamp = midnight_last_monday
+                    else:
+                        timestamp = last_daily_level[0]["timestamp"] + time_limit
+                else:
+                    timestamp = midnight_last_monday
+
+                db.daily_level.insert_one({
+                    "daily_id": last_id(db.daily_level, "daily_id"),
+                    "type_daily": 1,
+                    "level_id": level_id,
+                    "timestamp": timestamp
+                })
 
     if bool(query_level):
         db.level.update_one({"_id": level_id}, {"$set": query_level})

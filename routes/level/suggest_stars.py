@@ -58,7 +58,7 @@ def suggest_stars():
         abort(500)
 
     role_id = db.role_assign.find_one({"_id": account_id})["role_id"]
-    access = db.role.find_one({"_id": role_id})["command_access"]["suggest_stars"]
+    access = db.role.find_one({"_id": role_id})["command_access"]["suggest_stars_button"]
 
     query_level = {"rate_time": int(time())} | FEATURED_CONV[featured]
 

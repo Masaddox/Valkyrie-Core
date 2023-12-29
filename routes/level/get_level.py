@@ -88,7 +88,8 @@ def get_level():
 
     query = {
         "unlisted": 0,
-        "is_deleted": 0
+        "is_deleted": 0,
+        "$or": []
     }
 
     sort = [("likes", DESCENDING)]
@@ -104,16 +105,24 @@ def get_level():
         if bool_chk(no_star):
             query["stars"] = 0
         if bool_chk(featured):
-            query["featured"] = 1
-            query["epic"] = 0
-            query["legendary"] = 0
-            query["mythic"] = 0
+            query["$or"].append({
+                "featured": 1,
+                "epic": 0,
+                "legendary": 0,
+                "mythic": 0
+            })
         if bool_chk(epic):
-            query["epic"] = 1
+            query["$or"].append(
+                {"epic": 1}
+            )
         if bool_chk(legendary):
-            query["legendary"] = 1
-        if bool_chk(mythic):  # MASADDOX ON TRACK filter
-            query["mythic"] = 1
+            query["$or"].append(
+                {"legendary": 1}
+            )
+        if bool_chk(mythic):
+            query["$or"].append(
+                {"mythic": 1}
+            )
         if bool_chk(original):
             query["original_id"] = 0
         if bool_chk(two_player):
@@ -164,7 +173,7 @@ def get_level():
                 if int_conv(search) > 0:
                     query = {"_id": int_conv(search), "is_deleted": 0}  # "$or": []
                 elif search != "":
-                    query["name"] = {"$regex": f"^{search}$", '$options': 'i'}
+                    query["name"] = {"$regex": f"^{search}.*", '$options': 'i'}
 
             case 1:  # Больше всего загрузок
                 sort = [("downloads", DESCENDING)]
@@ -210,6 +219,7 @@ def get_level():
                 query["account_id"] = {"$in": list(map(int_conv, account_ids))}
 
             case 13:  # Вкладка Friends
+                sort = [("_id", DESCENDING)]
                 if confirmed_account:
                     friends = list(db.friend_list.find({"_id": account_id}))
                     if bool(friends):
@@ -223,10 +233,34 @@ def get_level():
                 query["epic"] = 1
 
             case 21:  # Хранилище Daily
-                pass
+                time_now = int(time())
+
+                daily_levels = list(db.daily_level.find({
+                    "timestamp": {"$lte": time_now},
+                    "type_daily": 0
+                }).sort([("timestamp", DESCENDING)]))[:-1]
+
+                try:
+                    daily_level_ids = [i["level_id"] for i in daily_levels]
+                except IndexError:
+                    return "-1"
+
+                query["_id"] = {"$in": daily_level_ids}
 
             case 22:  # Хранилище Weekly
-                pass
+                time_now = int(time())
+
+                daily_levels = list(db.daily_level.find({
+                    "timestamp": {"$lte": time_now},
+                    "type_daily": 1
+                }).sort([("timestamp", DESCENDING)]))[:-1]
+
+                try:
+                    daily_level_ids = [i["level_id"] for i in daily_levels]
+                except IndexError:
+                    return "-1"
+
+                query["_id"] = {"$in": daily_level_ids}
 
             case 23:  # Хранилище событий
                 pass
@@ -243,6 +277,9 @@ def get_level():
 
     if sort:
         levels.sort(sort)
+
+    if not bool(query["$or"]):
+        del query["$or"]
 
     levels = tuple(levels)
     response = ""
