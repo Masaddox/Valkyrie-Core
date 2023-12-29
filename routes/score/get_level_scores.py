@@ -1,5 +1,6 @@
 from . import score
 from time import time
+from icecream import ic
 from config import PATH_TO_DATABASE
 from pymongo import DESCENDING, ASCENDING
 
@@ -57,9 +58,13 @@ def get_level_scores():
         return "-1"
 
     if db.level.count_documents({
-        "_id": level_id, "is_deleted": 0,
-        "coins": {"$gte": coins}, "length": {"lte": 4}
+        "_id": level_id, "is_deleted": 0
     }) == 0:
+        return "-1"
+
+    level = db.level.find({"_id": level_id})[0]
+
+    if coins > level["coins"] and level["length"] >= 5:
         return "-1"
 
     if db.level_score.count_documents({
