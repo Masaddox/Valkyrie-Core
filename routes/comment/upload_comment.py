@@ -36,7 +36,10 @@ def upload_comment():
         return "-1"
 
     level_comment = request_get("comment")
+
     level_id = request_get("levelID", "int")
+    is_level = 1 if level_id > 0 else 0
+
     percent = request_get("percent", "int")
 
     level_comment_decode = base64_decode(level_comment)
@@ -52,12 +55,20 @@ def upload_comment():
     if percent > 100 or percent < 0:
         return "-1"
 
-    if db.level.count_documents({
-        "_id": level_id, "is_deleted": 0
-    }) == 0:
-        return "-1"
+    if is_level:
+        if db.level.count_documents({
+            "_id": level_id, "is_deleted": 0
+        }) == 0:
+            return "-1"
+    elif not is_level:
+        level_id *= -1
 
-    if level_comment_decode[0] == COMMAND_PREFIX:  # Команда
+        if db.level_list.count_documents({
+            "_id": level_id, "is_deleted": 0
+        }) == 0:
+            return "-1"
+
+    if level_comment_decode[0] == COMMAND_PREFIX and is_level:  # Команда
         commands(account_id, level_id, level_comment_decode)
         return "-1"
 
@@ -65,9 +76,11 @@ def upload_comment():
         "_id": last_id(db.level_comment),
         "account_id": account_id,
         "level_id": level_id,
+        "is_level": is_level,
         "comment": base64_encode(level_comment),
-        "percent": percent,
+        "percent": percent if is_level else 0,
         "likes": 0,
+        "is_deleted": 0,
         "upload_time": int(time())
     }
 

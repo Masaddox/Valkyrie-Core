@@ -51,6 +51,7 @@ def upload_account_comment():
         "account_id": account_id,
         "comment": account_comment,
         "likes": 0,
+        "is_deleted": 0,
         "upload_time": int(time())
     }
 

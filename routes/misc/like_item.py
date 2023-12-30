@@ -56,14 +56,10 @@ def like_item():
             return "1"
 
     if coll.count_documents({
-        "_id": item_id
-    }) == 0:
-        return "1"
-
-    if item_type == 1 and coll.count_documents({
         "_id": item_id, "is_deleted": 0
     }) == 0:
         return "1"
+
     elif PROTECTION_AGAINST_DISLIKE_BOTS:
         if db.action_download.count_documents({
             "level_id": item_id, "account_id": account_id

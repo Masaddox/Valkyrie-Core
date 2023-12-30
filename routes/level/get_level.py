@@ -1,5 +1,3 @@
-from icecream import ic
-
 from . import level
 from time import time
 from config import PATH_TO_DATABASE
@@ -8,11 +6,11 @@ from pymongo import DESCENDING, ASCENDING
 from utils import database as db
 
 from utils.passwd import check_password
-from utils.request_get import request_get
 from utils.check_secret import check_secret
 from utils.level_hashing import return_hash
 from utils.check_version import check_version
 from utils.response_processing import resp_proc
+from utils.request_get import request_get, get_ip
 from utils.difficulty_converter import demon_conv
 
 
@@ -265,10 +263,36 @@ def get_level():
                 query["_id"] = {"$in": daily_level_ids}
 
             case 23:  # Хранилище событий
-                pass
+                return "-1"
 
             case 25:  # Лист уровней
-                pass
+                try:
+                    lvl_list = db.level_list.find({"_id": int_conv(search)})[0]
+
+                    if lvl_list["friend_only"] == 1 and confirmed_account:
+                        friend_list = db.friend_list.find_one({"_id": account_id})
+
+                        if lvl_list["account_id"] == account_id:
+                            pass
+                        elif lvl_list["account_id"] not in friend_list:
+                            return "-1"
+
+                    else:
+                        return "-1"
+                except IndexError:
+                    return "-1"
+
+                if db.action_download.count_documents({
+                    "list_id": int_conv(search), "account_id": account_id
+                }) == 0:
+                    db.action_download.insert_one({
+                        "list_id": int_conv(search),
+                        "account_id": account_id,
+                        "ip": get_ip(),
+                        "timestamp": int(time())
+                    })
+
+                query["_id"] = {"$in": lvl_list["levels"]}
 
             case 27:  # Отправленные уровни
                 query["_id"] = {"$in": [i["level_id"] for i in db.suggest.find()]}
@@ -363,11 +387,11 @@ def get_level():
 
             for song in song_ids:
                 try:
-                    song_info = tuple(db.song.find({"_id": song}))
+                    song_info = list(db.song.find({"_id": song}))[0]
                     single_song = {
-                        1: song_info[0]["_id"], 2: song_info[0]["name"], 3: 0,
-                        4: song_info[0]["artist_name"], 5: "{0:.2f}".format(song_info[0]["size"]),
-                        6: "", 10: song_info[0]["link"], 7: "", 8: 0
+                        1: song_info["_id"], 2: song_info["name"], 3: 0,
+                        4: song_info["artist_name"], 5: "{0:.2f}".format(song_info["size"]),
+                        6: "", 10: song_info["link"], 7: "", 8: 0
                     }
                     response += resp_proc(single_song, 3)[:-1] + ":~"
                 except IndexError:

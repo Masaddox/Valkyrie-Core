@@ -62,6 +62,19 @@ def commands(account_id, level_id, command):
                 removal_of_residues(level_id)
                 return True
 
+        case "deletesent":
+            if is_mod and role["command_access"]["delete"]:
+                if db.suggest.count_documents({
+                    "level_id": level_id
+                }) == 0:
+                    return False
+
+                db.suggest.delete_one({
+                    "level_id": level_id
+                })
+
+                return True
+
         case "rate":
             if is_mod and role["command_access"]["rate"]:
                 diff = 0

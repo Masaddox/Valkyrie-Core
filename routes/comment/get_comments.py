@@ -19,6 +19,10 @@ def get_comments():
         return "-1"
 
     level_id = request_get("levelID", "int")
+    is_level = 1 if level_id > 0 else 0
+
+    if not is_level:
+        level_id *= -1
 
     page = request_get("page", "int")
     offset = page * 10
@@ -27,7 +31,8 @@ def get_comments():
     sort = [("_id", DESCENDING)] if sort_mode == 0 else [("likes", DESCENDING)]
 
     query = {
-        "level_id": level_id
+        "level_id": level_id,
+        "is_level": is_level
     }
 
     comments = tuple(db.level_comment.find(query).skip(offset).limit(10).sort(sort))
