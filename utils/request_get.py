@@ -10,6 +10,8 @@ def request_get(arg, arg_type="str"):
             return ""
         elif arg_type == "int":
             return 0
+        elif arg_type == "list_int":
+            return []
         else:
             return ""
 
@@ -21,6 +23,11 @@ def request_get(arg, arg_type="str"):
             return int(received_data)
         except ValueError:
             return 0
+    elif arg_type == "list_int":
+        try:
+            return list(map(int, received_data.split(",")))
+        except ValueError:
+            return []
     else:
         return ""
 

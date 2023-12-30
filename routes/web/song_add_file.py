@@ -61,7 +61,7 @@ def song_add_file():
             account_id = account_id[0]["_id"]
 
         if not check_password(
-            account_id, password, is_gjp=False
+            account_id, password, is_gjp=False, fast_mode=False
         ):
             message = "Incorrect login or password!"
             raise

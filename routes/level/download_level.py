@@ -44,6 +44,22 @@ def download_level():
     ):
         return "-1"
 
+    account_id = request_get("accountID", "int")
+    password = request_get("gjp")
+
+    is_gjp2 = False
+    confirmed_account = False
+
+    if request_get("gjp2") != "":
+        is_gjp2 = True
+        password = request_get("gjp2")
+
+    if check_password(
+        account_id, password,
+        is_gjp=not is_gjp2, is_gjp2=is_gjp2
+    ):
+        confirmed_account = True
+
     level_id = request_get("levelID", "int")
 
     featured_id = 0
@@ -73,6 +89,25 @@ def download_level():
         return "-1"
 
     level_info = tuple(db.level.find({"_id": level_id, "is_deleted": 0}))
+
+    if not bool(level_info):
+        return "-1"
+
+    if level_info[0]["friend_only"] == 1:
+        if not confirmed_account:
+            return "-1"
+
+        try:
+            friend_list = db.friend_list.find_one(
+                {"_id": level_info[0]["account_id"]}
+            )["friend_list"]
+        except IndexError:
+            return "-1"
+
+        if account_id == level_info[0]["account_id"]:
+            pass
+        elif account_id not in friend_list:
+            return "-1"
 
     user_info = ""
     response = ""
@@ -120,19 +155,7 @@ def download_level():
 
         response = resp_proc(single_response) + f"#{return_hash2(level_string)}#{return_hash(hash_string)}"
 
-    account_id = request_get("accountID", "int")
-    password = request_get("gjp")
-
-    is_gjp2 = False
-
-    if request_get("gjp2") != "":
-        is_gjp2 = True
-        password = request_get("gjp2")
-
-    if check_password(
-        account_id, password,
-        is_gjp=not is_gjp2, is_gjp2=is_gjp2
-    ):
+    if confirmed_account:
         th = Thread(name="update_download_counter",
                     target=update_download_counter,
                     args=(level_id, account_id, get_ip(),))

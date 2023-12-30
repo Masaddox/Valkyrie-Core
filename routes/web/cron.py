@@ -1,12 +1,21 @@
+import logging
 from . import web
 from time import time
-from config import REDIS_PREFIX
+from os.path import join
+from config import REDIS_PREFIX, PATH_TO_ROOT
 from routes.score.get_scores import upload_scores
 
 from utils import database as db
 
 from utils.redis_db import client as rd
 from utils.limit_check import limit_check
+
+
+CP_RATE = 1
+CP_FEATURED = 2
+CP_EPIC = 4
+CP_LEGENDARY = 6
+CP_MYTHIC = 10
 
 
 @web.route("/cron/<task>/<key>", methods=("POST", "GET"))
@@ -19,13 +28,11 @@ def cron(task, key):
 
     if task == "gd":
 
-        """ Константы """
-
-        CP_RATE = 1
-        CP_FEATURED = 2
-        CP_EPIC = 4
-        CP_LEGENDARY = 6
-        CP_MYTHIC = 10
+        logging.basicConfig(
+            level=logging.INFO,
+            filename=join(PATH_TO_ROOT, "data", "log", f"{int(time())}_cron_gd.log"),
+            filemode="w"
+        )
 
         """ Выдача creator points """
 
@@ -40,14 +47,26 @@ def cron(task, key):
                 if lvl["account_id"] not in creator_list:
                     creator_list[lvl["account_id"]] = 0
 
-                if lvl["featured"] == 0 and lvl["epic"] == 0:
+                if (lvl["featured"] == 0 and lvl["epic"] == 0
+                        and lvl["legendary"] == 0 and lvl["mythic"] == 0):
                     creator_list[lvl["account_id"]] += CP_RATE
-                elif lvl["featured"] == 1 and lvl["epic"] == 0:
+
+                elif (lvl["featured"] == 1 and lvl["epic"] == 0
+                        and lvl["legendary"] == 0 and lvl["mythic"] == 0):
                     creator_list[lvl["account_id"]] += CP_FEATURED
-                if lvl["epic"] == 1:
+
+                elif lvl["epic"] == 1 and lvl["legendary"] == 0 and lvl["mythic"] == 0:
                     creator_list[lvl["account_id"]] += CP_EPIC
 
+                elif lvl["legendary"] == 1 and lvl["mythic"] == 0:
+                    creator_list[lvl["account_id"]] += CP_LEGENDARY
+
+                elif lvl["mythic"] == 1:
+                    creator_list[lvl["account_id"]] += CP_MYTHIC
+
             for creator in creator_list:
+                logging.info(f"{creator} - {creator_list[creator]} CP")
+
                 db.account_stat.update_one({"_id": creator}, {"$set": {
                     "creator_points": creator_list[creator]
                 }})
@@ -58,9 +77,10 @@ def cron(task, key):
 
         """ Античит """
 
-        max_stars = 190  # Сколько можно собрать статистику, не проходя онлайн уровней
+        max_stars = 202  # Сколько можно собрать статистику, не проходя онлайн уровней
+        max_moons = 25
         max_demons = 3
-        max_gold_coins = 66
+        max_gold_coins = 81
         max_silver_coins = 0
 
         users = tuple(db.account_stat.find({"is_top_banned": 0}))
@@ -69,7 +89,10 @@ def cron(task, key):
         daily_levels = tuple(db.daily_level.find())
 
         for level in levels:
-            max_stars += level["stars"]
+            if level["length"] == 5:
+                max_moons += level["stars"]
+            else:
+                max_stars += level["stars"]
             max_demons += level["demon"]
             max_silver_coins += level["coins"] if level["is_silver_coins"] == 1 else 0
 
@@ -82,9 +105,16 @@ def cron(task, key):
             for gauntlet in gauntlets:
                 level_ids = gauntlet["levels"].split(",")
                 for level_id in level_ids:
-                    level = db.level.find({"_id": int(level_id)})[0]
+                    try:
+                        level = db.level.find({"_id": int(level_id)})[0]
+                    except IndexError:
+                        continue
 
-                    max_stars += level["stars"]
+                    if level["length"] == 5:
+                        max_moons += level["stars"]
+                    else:
+                        max_stars += level["stars"]
+
                     max_demons += level["demon"]
                     max_silver_coins += level["coins"] if level["is_silver_coins"] == 1 else 0
 
@@ -93,15 +123,25 @@ def cron(task, key):
                 level_id = daily_level["level_id"]
                 level = db.level.find({"_id": int(level_id)})[0]
 
-                max_stars += level["stars"]
+                if level["length"] == 5:
+                    max_moons += level["stars"]
+                else:
+                    max_stars += level["stars"]
+
                 max_demons += level["demon"]
                 max_silver_coins += level["coins"] if level["is_silver_coins"] == 1 else 0
 
+        logging.info(
+            f"stars - {max_stars}; moons - {max_moons}; demons - {max_demons}; "
+            f"gold_coins - {max_gold_coins}; silver_coins - {max_silver_coins}"
+        )
+
         for user in users:
             if not limit_check(
-                (user["stars"], max_stars), (user["demons"], max_demons),
+                (user["stars"], max_stars), (user["moons"], max_moons), (user["demons"], max_demons),
                 (user["user_coins"], max_silver_coins), (user["secret_coins"], max_gold_coins)
             ):
+                logging.info(f"{user["_id"]} BANNED!")
                 db.account_stat.update_one({"_id": user["_id"]}, {"$set": {
                     "is_top_banned": 1
                 }})
@@ -144,6 +184,7 @@ def cron(task, key):
                     "comment_color": comment_color
                 }})
 
+        logging.shutdown()
         return "1"
 
     else:

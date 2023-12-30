@@ -1,3 +1,5 @@
+from icecream import ic
+
 from . import level
 from time import time
 from config import PATH_TO_DATABASE
@@ -115,12 +117,12 @@ def get_level():
             query["$or"].append(
                 {"epic": 1}
             )
-        if bool_chk(legendary):
+        if bool_chk(mythic):  # legendary
             query["$or"].append(
                 {"legendary": 1}
             )
-        if bool_chk(mythic):
-            query["$or"].append(
+        if bool_chk(legendary):  # mythic
+            query["$or"].append(  # fix it 2.21
                 {"mythic": 1}
             )
         if bool_chk(original):
@@ -171,7 +173,7 @@ def get_level():
         match int(type_pack):
             case 0:  # Поиск
                 if int_conv(search) > 0:
-                    query = {"_id": int_conv(search), "is_deleted": 0}  # "$or": []
+                    query = {"_id": int_conv(search), "is_deleted": 0, "$or": []}
                 elif search != "":
                     query["name"] = {"$regex": f"^{search}.*", '$options': 'i'}
 
@@ -284,6 +286,23 @@ def get_level():
     levels = tuple(levels)
     response = ""
 
+    if not bool(levels):
+        return "#0:0:10"
+
+    if int(type_pack) == 0 and int_conv(search) > 0:
+        if levels[0]["friend_only"] == 1:
+            try:
+                friend_list = db.friend_list.find_one(
+                    {"_id": levels[0]["account_id"]}
+                )["friend_list"]
+            except IndexError:
+                return "-1"
+
+            if account_id == levels[0]["account_id"]:
+                pass
+            elif account_id not in friend_list:
+                return "-1"
+
     for lvl in levels:
         diff = 0
 
@@ -318,24 +337,41 @@ def get_level():
         response = response[:-1] + "#"
 
     hash_string = ""
+    response_user = []
+    response_user_name = {}
 
     for lvl in levels:
-        response += f"{lvl['account_id']}:{lvl['username']}:{lvl['account_id']}|"
+        response_user.append(lvl['account_id'])
+        response_user_name[lvl['account_id']] = lvl['username']
+
         hash_string += str(lvl["_id"])[0] + str(lvl["_id"])[-1] + \
                        str(lvl["stars"]) + str(lvl["is_silver_coins"])
     else:
+        response_user = list(set(response_user))
+
+        for user in response_user:
+            response += f"{user}:{response_user_name[user]}:{user}|"
+
         response = response[:-1] + "#"
 
     for lvl in levels:
-        if lvl["song_id"] > 0 and lvl["is_official_song"] == 0:
-                
-            song_info = tuple(db.song.find({"_id": lvl["song_id"]}))
-            single_song = {
-                1: song_info[0]["_id"], 2: song_info[0]["name"], 3: 0,
-                4: song_info[0]["artist_name"], 5: "{0:.2f}".format(song_info[0]["size"]),
-                6: "", 10: song_info[0]["link"], 7: "", 8: 0
-            }
-            response += resp_proc(single_song, 3)[:-1] + ":~"
+        if (lvl["song_id"] > 0 and lvl["is_official_song"] == 0) or lvl["song_ids"] != "":
+            song_ids = [lvl["song_id"]]
+
+            if lvl["song_ids"] != "":
+                song_ids += list(map(int, lvl["song_ids"].split(",")))
+
+            for song in song_ids:
+                try:
+                    song_info = tuple(db.song.find({"_id": song}))
+                    single_song = {
+                        1: song_info[0]["_id"], 2: song_info[0]["name"], 3: 0,
+                        4: song_info[0]["artist_name"], 5: "{0:.2f}".format(song_info[0]["size"]),
+                        6: "", 10: song_info[0]["link"], 7: "", 8: 0
+                    }
+                    response += resp_proc(single_song, 3)[:-1] + ":~"
+                except IndexError:
+                    continue
     else:
         if response[-2:] == ":~":
             response = response[:-2]

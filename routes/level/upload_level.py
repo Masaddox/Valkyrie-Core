@@ -19,7 +19,7 @@ from utils.base64_dec_and_enc import base64_decode
 
 
 MAXIMUM_LEVEL_SIZE = 5 * 1024 * 1024  # 5 MB
-MINIMUM_NUMBER_BLOCKS = 50
+MINIMUM_NUMBER_BLOCKS = 49
 
 
 @level.route(f"{PATH_TO_DATABASE}/uploadGJLevel21.php", methods=("POST", "GET"))

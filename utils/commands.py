@@ -153,7 +153,9 @@ def commands(account_id, level_id, command):
 
                 query_level = {
                     "featured": 1,
-                    "epic": epic if 0 <= epic <= 1 else 0
+                    "epic": epic if 0 <= epic <= 1 else 0,
+                    "legendary": 0,
+                    "mythic": 0
                 }
 
         case "unepic":
@@ -173,7 +175,8 @@ def commands(account_id, level_id, command):
                 query_level = {
                     "featured": 1,
                     "epic": 0,
-                    "legendary": legend if 0 <= legend <= 1 else 0
+                    "legendary": legend if 0 <= legend <= 1 else 0,
+                    "mythic": 0
                 }
 
         case "unlegendary":

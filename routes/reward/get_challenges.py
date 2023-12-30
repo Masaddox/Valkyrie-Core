@@ -14,9 +14,9 @@ from utils.base64_dec_and_enc import base64_decode, base64_encode
 
 
 QUESTS = [
-    {"quest_type": 1, "amount": 200, "reward": (10, 50), "name": "Orbs"},  # orbs
-    {"quest_type": 2, "amount": 4, "reward": (10, 50), "name": "Coins"},   # coins
-    {"quest_type": 3, "amount": 15, "reward": (10, 50), "name": "Stars"}   # stars
+    {"quest_type": 1, "amount": 200, "reward": (5, 25), "name": "Collect Orbs"},  # orbs
+    {"quest_type": 2, "amount": 4, "reward": (5, 25), "name": "Find Coins"},      # coins
+    {"quest_type": 3, "amount": 15, "reward": (5, 25), "name": "Star Master"}     # stars
 ]
 
 
