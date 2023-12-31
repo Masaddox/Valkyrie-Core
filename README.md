@@ -17,9 +17,15 @@ and *lightweight and scalable code* allows you to change the core to your taste,
 даёт возможность изменять ядро под свой вкус, без больших усилий. Для хранения данных используется база данных **MongoDB**, а для
 кеширования данных *(которая очень хорошо ускоряет ядро)* используется **RedisDB**.
 
+---
+
 ### Supported versions [ENG]
 **Valkyrie-Core** fully supports: *2.2*
 Backward compatibility with: *2.1*
+
+### Поддерживаемые версии [RUS]
+**Valkyrie-Core** полностью поддерживает: *2.2*
+Обратная совместимость с: *2.1*
 
 ---
 
