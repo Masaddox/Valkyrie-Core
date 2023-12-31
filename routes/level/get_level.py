@@ -267,7 +267,8 @@ def get_level():
 
             case 25:  # Лист уровней
                 try:
-                    lvl_list = db.level_list.find({"_id": int_conv(search)})[0]
+                    list_id = int_conv(search)
+                    lvl_list = db.level_list.find({"_id": list_id})[0]
 
                     if lvl_list["friend_only"] == 1 and confirmed_account:
                         friend_list = db.friend_list.find_one({"_id": account_id})
@@ -276,14 +277,15 @@ def get_level():
                             pass
                         elif lvl_list["account_id"] not in friend_list:
                             return "-1"
-
+                    elif lvl_list["friend_only"] == 0:
+                        pass
                     else:
                         return "-1"
                 except IndexError:
                     return "-1"
 
                 if db.action_download.count_documents({
-                    "list_id": int_conv(search), "account_id": account_id
+                    "list_id": list_id, "account_id": account_id
                 }) == 0:
                     db.action_download.insert_one({
                         "list_id": int_conv(search),
@@ -291,6 +293,10 @@ def get_level():
                         "ip": get_ip(),
                         "timestamp": int(time())
                     })
+
+                    db.level_list.update_one({"_id": list_id}, {"$set": {
+                        "downloads": 1
+                    }})
 
                 query["_id"] = {"$in": lvl_list["levels"]}
 

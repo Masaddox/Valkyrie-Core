@@ -69,7 +69,7 @@ def upload_comment():
             return "-1"
 
     if level_comment_decode[0] == COMMAND_PREFIX and is_level:  # Команда
-        commands(account_id, level_id, level_comment_decode)
+        commands(account_id, level_id, level_comment_decode, is_level)
         return "-1"
 
     sample_comment = {
