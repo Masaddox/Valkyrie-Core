@@ -20,11 +20,11 @@ and *lightweight and scalable code* allows you to change the core to your taste,
 ---
 
 ### Supported versions [ENG]
-**Valkyrie-Core** fully supports: *2.2*
+**Valkyrie-Core** fully supports: *2.2*\
 Backward compatibility with: *2.1*
 
 ### Поддерживаемые версии [RUS]
-**Valkyrie-Core** полностью поддерживает: *2.2*
+**Valkyrie-Core** полностью поддерживает: *2.2*\
 Обратная совместимость с: *2.1*
 
 ---
