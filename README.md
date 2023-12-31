@@ -17,6 +17,10 @@ and *lightweight and scalable code* allows you to change the core to your taste,
 даёт возможность изменять ядро под свой вкус, без больших усилий. Для хранения данных используется база данных **MongoDB**, а для
 кеширования данных *(которая очень хорошо ускоряет ядро)* используется **RedisDB**.
 
+### Supported versions [ENG]
+**Valkyrie-Core** fully supports: *2.2*
+Backward compatibility with: *2.1*
+
 ---
 
 ### System requirements
@@ -25,28 +29,7 @@ and *lightweight and scalable code* allows you to change the core to your taste,
 > RAM: 512 MB. Recommended 1 GB or higher. \
 > Storage: 7 GB HDD. Recommended 15 GB SSD or higher. \
 > \
-> Python: 3.11 and higher. (it is possible that the kernel has been running since version 3.8, but this has not been tested).
-
-
----
-
-### Note [ENG]
-
-The core was primarily written for needs of author, which means that some functions, 
-such as *daily/weekly chests* and *level leaderboards* cut or implemented differently. 
-Although the core in its current state works well, this does not negate fact that there may be errors / shortcomings in the core.
-If someone finds and reports a bug, then the bug will be fixed as soon as possible.
-
-P.s. 20.12.2023: I may be making support for 2.2 soon.
-
-### Примечание [RUS]
-
-Ядро в первую очередь писалось под нужды автора, так что некоторые функции,
-такие как *ежедневные/еженедельные сундуки* и *таблица лидеров уровня*, вырезаны или реализованные
-по своему. Хоть ядро в нынешнем состоянии работает хорошо, но это не отрицает того, что в ядре могут быть баги/недочёты.
-Если кто-то найдёт и сообщит о баге, то баг будет как можно быстрее исправлен.
-
-P.s. 20.12.2023: Возможно в скором времени я сделаю поддержку 2.2.
+> Python: 3.12 and higher.
 
 ---
 
