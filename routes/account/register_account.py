@@ -79,18 +79,15 @@ def register_account():
 
         rd.set(f"{REDIS_PREFIX}:{code}:confirm", account_id, 3600)
 
-    sample_account = {
+    db.account.insert_one({
         "_id": account_id,
         "username": username,
         "password": password_hashing(password),
         "gjp2": generate_gjp2(password, bcrypt=True),
         "email": email,
-        "discord_id": 0,
         "date": int(time()),
         "is_banned": 0,
         "is_valid": 0
-    }
-
-    db.account.insert_one(sample_account)
+    })
 
     return "1"
