@@ -4,7 +4,7 @@ from os import getcwd, listdir, getenv
 
 env_is_not_exist = True
 
-for file in listdir(r"D:\Code\Valkyrie-Core"):
+for file in listdir(r"."):
     if file == ".env":
         load_dotenv()
         env_is_not_exist = False
