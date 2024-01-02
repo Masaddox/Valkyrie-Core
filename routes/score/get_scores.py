@@ -11,6 +11,7 @@ from utils.check_secret import check_secret
 from utils.response_processing import resp_proc
 
 SCORES_LIFETIME = 3600
+REPLACING_RELATIVE_WITH_MOONS = False
 
 
 def upload_scores(score_type="top"):  # for cron
@@ -74,10 +75,12 @@ def get_scores():
 
     score_type = request_get("type")
 
-    if score_type == "" or score_type == "relative":  # Пока relative я не буду реализовывать
+    if score_type == "":
         score_type = "top"
+    elif score_type == "relative" and REPLACING_RELATIVE_WITH_MOONS:
+        score_type = "moons"
 
-    if score_type != "friends" and score_type != "relative":
+    if score_type != "friends":
         cache = rd.get(f"{REDIS_PREFIX}:top:{score_type}")
         if cache is not None:
             return cache
@@ -98,13 +101,17 @@ def get_scores():
         case "friends":
             try:
                 friend_list = db.friend_list.find_one({"_id": account_id})["friend_list"]
-            except IndexError:
+            except TypeError:
                 return "1"
 
             query["_id"] = {"$in": friend_list + [account_id]}
 
+        case "moons":
+            query["moons"] = {"$gte": 10}
+            sort = [("moons", DESCENDING)]
+
         case "relative":
-            pass
+            pass  # Мне всё ещё лень реализовывать relative
 
     response = ""
 
