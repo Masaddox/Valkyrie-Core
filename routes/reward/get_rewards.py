@@ -18,14 +18,14 @@ DAILY_CHESTS = {
     "small": {
         "orbs": (500, 1000),
         "diamonds": (1, 5),
-        "items": [1, 2, 3, 4, 5, 6],
+        "items": list(range(1, 15)),  # [1, 2, ... 14]
         "keys": (1, 10),
         "wait_time": 30 * 60
     },
     "big": {
         "orbs": (1000, 4000),
         "diamonds": (5, 40),
-        "items": [1, 2, 3, 4, 5, 6],
+        "items": list(range(1, 15)),
         "keys": (10, 50),
         "wait_time": 2 * 60 * 60
     }
