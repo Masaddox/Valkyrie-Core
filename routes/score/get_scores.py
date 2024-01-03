@@ -20,11 +20,23 @@ def upload_scores(score_type="top"):  # for cron
     limit = 100
     sort = [("stars", DESCENDING)]
 
-    if score_type == "top":
-        query["stars"] = {"$gte": 10}
-    elif score_type == "creators":
-        query["creator_points"] = {"$gt": 0}
-        sort = [("creator_points", DESCENDING)]
+    if score_type == "relative" and REPLACING_RELATIVE_WITH_MOONS:
+        score_type = "moons"
+
+    match score_type:
+        case "top":
+            query["stars"] = {"$gte": 10}
+
+        case "creators":
+            query["creator_points"] = {"$gt": 0}
+            sort = [("creator_points", DESCENDING)]
+
+        case "moons":
+            query["moons"] = {"$gte": 10}
+            sort = [("moons", DESCENDING)]
+
+        case _:
+            return False
 
     response = ""
 
@@ -39,8 +51,8 @@ def upload_scores(score_type="top"):  # for cron
         single_response = {
             1: user["username"], 2: user["_id"], 13: user["secret_coins"], 17: user["user_coins"],
             6: counter, 9: user["icon_id"], 10: user["first_color"], 11: user["second_color"],
-            14: user["icon_type"], 15: glow, 16: user["_id"], 3: user["stars"], 8: user["creator_points"],
-            46: user["diamonds"], 4: user["demons"]
+            51: user["third_color"], 14: user["icon_type"], 15: glow, 16: user["_id"], 3: user["stars"],
+            8: user["creator_points"], 52: user["moons"], 46: user["diamonds"], 4: user["demons"]
         }
 
         counter += 1
