@@ -2,12 +2,14 @@ import logging
 from . import web
 from time import time
 from os.path import join
+from hashlib import sha256
 from config import REDIS_PREFIX, PATH_TO_ROOT
 from routes.score.get_scores import upload_scores
 
 from utils import database as db
 
 from utils.redis_db import client as rd
+from utils.request_get import request_get
 from utils.limit_check import limit_check
 
 
@@ -18,10 +20,15 @@ CP_LEGENDARY = 6
 CP_MYTHIC = 10
 
 
-@web.route("/cron/<task>/<key>", methods=("POST", "GET"))
-def cron(task, key):
+@web.route("/cron/<task>", methods=("POST", "GET"))
+def cron(task):
+    key = request_get("master_key")
+
+    if key == "":
+        return ""
+
     if db.master_key.count_documents({
-        "key": key,
+        "key": sha256(key).hexdigest(),
         "comment": "for cron"
     }) == 0:
         return ""
@@ -181,6 +188,14 @@ def cron(task, key):
                     "prefix": prefix,
                     "comment_color": comment_color
                 }})
+
+        """ Обнуление rate_time, если с уровня сняли оценку """
+
+        for level in db.level.find({"rate_time": {"gt": 0}}):
+            if level["stars"] > 0:
+                continue
+
+            db.level.update_one({"_id": level["_id"]}, {"$set": {"rate_time": 0}})
 
         logging.shutdown()
         return "1"
