@@ -34,9 +34,13 @@ def request_user_access():
         "_id": account_id
     }) == 0:
         return "-1"
-
-    role_id = db.role_assign.find_one({"_id": account_id})["role_id"]
-    role = db.role.find({"_id": role_id})
+    try:
+        role_id = db.role_assign.find_one({"_id": account_id})["role_id"]
+        role = db.role.find({"_id": role_id})[0]
+    except ValueError:
+        return "-1"
+    except IndexError:
+        return "-1"
 
     badge = role["mod_badge"]
 

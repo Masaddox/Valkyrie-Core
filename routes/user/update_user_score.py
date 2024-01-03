@@ -20,7 +20,7 @@ LIMIT = {
     "stars": 2500,
     "moons": 2500,
     "demons": 500,
-    "diamonds": 999999999,
+    "diamonds": 999_999_999,
     "user_coins": 1000,
     "secret_coins": 100,
 
