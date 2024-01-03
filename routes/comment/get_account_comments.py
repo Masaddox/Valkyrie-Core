@@ -48,6 +48,6 @@ def get_account_comments():
 
         response += resp_proc(single_response, 2) + "|"
 
-    response = response[:-1] + f"#{db.account_comment.count_documents(query)}:{offset}:10"
+    response = response + f"#{db.account_comment.count_documents(query)}:{offset}:10"
 
     return response

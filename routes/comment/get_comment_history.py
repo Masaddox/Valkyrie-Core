@@ -90,14 +90,14 @@ def get_comment_history():
         if user_info[0]["comment_color"] != "":
             single_comment_response.update({12: user_info[0]["comment_color"]})
 
-        response += resp_proc(single_comment_response, 2)[:-1] + ":"
+        response += resp_proc(single_comment_response, 2) + ":"
 
         single_user_response = {
             1: user_info[0]["username"], 9: user_info[0]["icon_id"], 10: user_info[0]["first_color"],
             11: user_info[0]["second_color"], 14: user_info[0]["icon_type"], 15: glow, 16: target_account_id
         }
 
-        response += resp_proc(single_user_response, 2)[:-1] + "|"
+        response += resp_proc(single_user_response, 2) + "|"
 
     response = response + f"#{db.level_comment.count_documents(query)}:{offset}:10"
 

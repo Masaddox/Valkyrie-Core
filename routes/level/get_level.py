@@ -399,7 +399,7 @@ def get_level():
                         4: song_info["artist_name"], 5: "{0:.2f}".format(song_info["size"]),
                         6: "", 10: song_info["link"], 7: "", 8: 0
                     }
-                    response += resp_proc(single_song, 3)[:-1] + ":~"
+                    response += resp_proc(single_song, 3) + ":~"
                 except IndexError:
                     continue
     else:

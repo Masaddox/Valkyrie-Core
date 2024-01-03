@@ -31,6 +31,6 @@ def get_song_info():
         6: "", 10: song_info["link"], 7: "", 8: 0
     }
 
-    response += resp_proc(single_song, 3)[:-2]
+    response += resp_proc(single_song, 3)
 
     return response

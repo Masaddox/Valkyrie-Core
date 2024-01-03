@@ -12,4 +12,4 @@ def resp_proc(resp_dict, type_proc=1):
     for key, value in resp_dict.items():
         response_string += f"{str(key)}{sep}{str(value)}{sep}"
 
-    return response_string[:-1]
+    return response_string[:-len(sep)]
