@@ -152,8 +152,6 @@ def cron(task, key):
 
         if top_list is None:
             top_list = upload_scores()
-        else:
-            top_list = top_list.decode()
 
         top_list = top_list.split("|")
 
