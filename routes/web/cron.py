@@ -2,6 +2,7 @@ import logging
 from . import web
 from time import time
 from os.path import join
+from flask import request
 from hashlib import sha256
 from config import REDIS_PREFIX, PATH_TO_ROOT
 from routes.score.get_scores import upload_scores
@@ -22,13 +23,16 @@ CP_MYTHIC = 10
 
 @web.route("/cron/<task>", methods=("POST", "GET"))
 def cron(task):
+    if request.method != "POST":
+        return ""
+
     key = request_get("master_key")
 
     if key == "":
         return ""
 
     if db.master_key.count_documents({
-        "key": sha256(key).hexdigest(),
+        "key": sha256(key.encode("utf-8")).hexdigest(),
         "comment": "for cron"
     }) == 0:
         return ""

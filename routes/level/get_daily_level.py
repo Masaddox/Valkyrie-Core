@@ -33,12 +33,12 @@ def get_daily_level():
         "type_daily": type_daily
     }).sort([("timestamp", DESCENDING)]).limit(1))
 
-    time_left = (daily_level[0]['timestamp'] + time_limit) - time_now
-
-    if time_left <= -1:
-        return "-1"
-
     try:
+        time_left = (daily_level[0]['timestamp'] + time_limit) - time_now
+
+        if time_left <= -1:
+            return "-1"
+
         return f"{daily_level[0]['daily_id'] + additional_id}|{time_left}"
     except IndexError:
         return "-1"
