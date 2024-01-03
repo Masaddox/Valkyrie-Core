@@ -46,7 +46,7 @@ def request_user_access():
 
     db.account_stat.update_one({"_id": account_id}, {"$set": {
         "mod_badge": badge,
-        "comment_color": role[0]["comment_color"]
+        "comment_color": role["comment_color"]
     }})
 
     return str(badge)
